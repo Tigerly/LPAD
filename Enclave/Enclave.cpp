@@ -27,16 +27,11 @@ void bar1(const char *fmt, ...)
 /* ecall_foo:
  *   Uses malloc/free to allocate/free trusted memory.
  */
+extern void EnclCompact();
 int ecall_foo(int i)
 {
-    void *ptr = malloc(100);
-    assert(ptr != NULL);
-    memset(ptr, 0x0, 100);
-    free(ptr);
-
-const char* pointer = "haha\n";
-bar1(pointer);
-
+    EnclCompact();
+bar1("haha\n");
     return i+1;
 }
 
