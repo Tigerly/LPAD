@@ -16,23 +16,23 @@
  */
 void bar1(const char *fmt, ...)
 {
-    char buf[BUFSIZ] = {'\0'};
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(buf, BUFSIZ, fmt, ap);
-    va_end(ap);
-    ocall_bar(buf);
+  char buf[BUFSIZ] = {'\0'};
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, BUFSIZ, fmt, ap);
+  va_end(ap);
+  ocall_bar(buf);
 }
 
 /* ecall_foo:
  *   Uses malloc/free to allocate/free trusted memory.
  */
-extern void EnclCompact();
-int ecall_foo(int i)
+extern void EnclCompact(int* input1, int* input2, int* output);
+int ecall_foo(int* input1,int* input2,int* output)
 {
-    EnclCompact();
-bar1("haha\n");
-    return i+1;
+  EnclCompact(input1, input2, output);
+  bar1("haha\n");
+  return 3;
 }
 
 /* ecall_sgx_cpuid:
@@ -40,7 +40,7 @@ bar1("haha\n");
  */
 void ecall_sgx_cpuid(int cpuinfo[4], int leaf)
 {
-    sgx_status_t ret = sgx_cpuid(cpuinfo, leaf);
-    if (ret != SGX_SUCCESS)
-        abort();
+  sgx_status_t ret = sgx_cpuid(cpuinfo, leaf);
+  if (ret != SGX_SUCCESS)
+    abort();
 }
