@@ -7,8 +7,7 @@
 #include "sgx_trts.h"
 #include "Enclave.h"
 #include "Enclave_t.h"  /* bar*/
-
-
+#include <unistd.h>
 
 /* 
  * printf: 
@@ -27,11 +26,10 @@ void bar1(const char *fmt, ...)
 /* ecall_foo:
  *   Uses malloc/free to allocate/free trusted memory.
  */
-extern void EnclCompact(int* input1, int* input2, int* output);
-int ecall_foo(int* input1,int* input2,int* output)
+extern void EnclCompact(int file_count);
+int ecall_foo(int i)
 {
-  EnclCompact(input1, input2, output);
-  bar1("haha\n");
+  EnclCompact(i);
   return 3;
 }
 
