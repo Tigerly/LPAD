@@ -11,11 +11,18 @@
 #include "App.h"
 #include "Enclave_u.h"
 
-int ecall_foo1(int* input1, int* intpu2, int* output)
+int su_prepare(int argc, char* argv[], int *r);
+void su_cleanup();
+void do_reload(int key_sizes[],int value_sizes[],
+    char key[], char value[], int length[], int channel);
+void do_flush(int key_sizes[], int value_sizes[], 
+    char key[],char value[], int length);
+
+int ecall_foo1(int file_count)
 {
   sgx_status_t ret = SGX_ERROR_UNEXPECTED;
   int retval;
-  ret = ecall_foo(global_eid, &retval, input1,intpu2,output);
+  ret = ecall_foo(global_eid, &retval, file_count);
 
   if (ret != SGX_SUCCESS)
     abort();
@@ -214,28 +221,34 @@ void ocall_bar(const char *str)
   printf("%s", str);
 }
 
+void ocall_flush(int key_sizes[],int value_sizes[], 
+    char key[], char value[],int length){
+  printf("in ocall_flush\n");
+  do_flush(key_sizes, value_sizes, key,value,length); 
+}
+
+void ocall_reload(int key_sizes[],int value_sizes[],
+    char key[], char value[], int length[], int way){
+  printf("in ocall_reload\n");
+  do_reload(key_sizes,value_sizes,key,value,length,way);
+}
+
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
   int i = 3;
   /* Initialize the enclave */
-  printf("a\n");
   if(initialize_enclave() < 0){printf("Error enclave and exit\n");return -1;}
-  printf("b\n");
 
   /* Utilize edger8r attributes */
   edger8r_function_attributes();
 
-  printf("c\n");
   /* Utilize trusted libraries */
   int retval;
-  int input1[10] = {1,2,3,4,5,6,7,8,9,10};
-  int input2[10] = {11,12,13,14,15,16,17,18,19,20};
-  int output[20];
-  retval=ecall_foo1(input1,input2, output);
-  for (int i=0;i<20;i++)
-    printf("%d \n",output[i]);
-  printf("\n");
+  int file_count = 0 ;
+  su_prepare(argc, argv, &file_count);
+  retval=ecall_foo1(file_count);
+  su_cleanup();
   printf("retval: %d\n", retval);
 
   /* Destroy the enclave */

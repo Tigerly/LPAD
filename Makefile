@@ -48,7 +48,25 @@ else
 	Urts_Library_Name := sgx_urts
 endif
 
-App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp)
+LEVELDB_FILES := App/untrusted/leveldb_entry.cc \
+                 App/untrusted/file_system.cc \
+                 App/untrusted/table.cc \
+                 App/untrusted/format.cc \
+                 App/untrusted/block.cc \
+                 App/untrusted/coding.cc \
+                 App/untrusted/iterator.cc \
+                 App/untrusted/two_level_iterator.cc \
+                 App/untrusted/filter_block.cc \
+                 App/untrusted/options.cc \
+                 App/untrusted/comparator.cc \
+                 App/untrusted/port_posix.cc \
+                 App/untrusted/merger.cc \
+                 App/untrusted/table_builder.cc \
+                 App/untrusted/block_builder.cc \
+                 App/untrusted/crc32c.cc 
+
+App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_FILES)
+
 App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
