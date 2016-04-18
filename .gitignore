@@ -44,5 +44,7 @@ app
 **/*_u.c
 **/*_u.h 
 
+output.ldb
+
 .*
 !/.gitignore

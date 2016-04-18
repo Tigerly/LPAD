@@ -1,11 +1,32 @@
 ZeroCopyC
 ===
 
+TODO
+---
 
-In Enclave/Enclave_t.c, replace `_in_input` by `_tmp_input`
+Enclave/Enclave.edl, to replace `void ocall_reload([out] int key_sizes[1024]` by:
+
+```
+    void ocall_eextrac_nextKey([out] int key_sizes[1],
+        [out] int value_sizes[1],
+        [out] char key[32],
+        [out] char value[100],
+        int fileIdx);
+/*
+    void ocall_extrac_reload(
+        [out] int length[1],
+        int fileIndex);
+*/
+    void ocall_1c_reload(
+        [out] int length[1],
+        int fileIndex);
+ 
+```
 
 ecall 
 ---
+
+In Enclave/Enclave_t.c, replace `_in_input` by `_tmp_input`
 
 ```c
 
@@ -29,4 +50,13 @@ err:
 	return status;
 }
 ```
+ocall
+---
 
+Enclave/Enclave_t.c
+
+```c
+if (value) memcpy((void*)value, ms->ms_value, _len_value);
+==>
+value = ms->ms_value;
+```
