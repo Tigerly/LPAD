@@ -27,9 +27,11 @@ void bar1(const char *fmt, ...)
  *   Uses malloc/free to allocate/free trusted memory.
  */
 extern void EnclCompact(int file_count);
+extern void eextrac_EnclCompact(int file_count);
 int ecall_foo(int i)
 {
   EnclCompact(i);
+//  eextrac_EnclCompact(i);
   return 3;
 }
 

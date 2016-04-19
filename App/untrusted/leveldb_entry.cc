@@ -56,6 +56,37 @@ void do_reload(int key_sizes[],int value_sizes[],
   length[0] = index;
 }
 
+void do_flush_eextrac(int key_size, int value_size, 
+    char key[],char value[]) {
+  Slice key_slice(key,key_size);
+  Slice value_slice(value,value_size);
+  builder->Add(key_slice,value_slice);
+}
+
+
+void do_reload_eextrac(int key_size[],int value_size[],
+    char key[], char value[], int valid[], int fileIdx){
+  Iterator* iter;
+  int i = 0;
+  int ks = 0;
+  int vs = 0;
+  iter = g_list[fileIdx];
+  if (iter->Valid()) {
+    valid[0] = 1;
+    ks = iter->key().size();
+    vs = iter->value().size();
+    key_size[0] = ks;
+    value_size[0] = vs; 
+    for (i=0;i< ks;i++)
+      key[i] = iter->key().data()[i];
+    for (i=0;i<vs;i++)
+      value[i] = iter->value().data()[i];
+    iter->Next();
+  } else {
+    valid[0] = 0;
+  }
+}
+
 
 int su_prepare(int argc, char* argv[], int *r){
   int file_count = atoi(argv[1]);

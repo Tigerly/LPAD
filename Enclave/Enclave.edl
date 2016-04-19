@@ -33,6 +33,19 @@ enclave {
         [in] char key[32768],
         [in] char value[102400],
         int length);
+    void ocall_eextrac_nextKey(
+        [out] int key_size[1],
+        [out] int value_size[1],
+        [out] char key[32],
+        [out] char value[100],
+        [out] int valid[1],        
+        int fileIdx);
+    void ocall_eextrac_flush(
+        int key_size,
+        int value_size,
+        [in] char key[32],
+        [in] char value[100]
+    );
   };
 
 };

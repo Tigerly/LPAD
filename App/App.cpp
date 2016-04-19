@@ -17,6 +17,10 @@ void do_reload(int key_sizes[],int value_sizes[],
     char key[], char value[], int length[], int channel);
 void do_flush(int key_sizes[], int value_sizes[], 
     char key[],char value[], int length);
+void do_reload_eextrac(int key_size[],int value_size[],
+    char key[], char value[], int valid[], int fileIdx);
+void do_flush_eextrac(int key_size, int value_size, 
+    char key[],char value[]);
 
 int ecall_foo1(int file_count)
 {
@@ -232,6 +236,20 @@ void ocall_reload(int key_sizes[],int value_sizes[],
   printf("in ocall_reload\n");
   do_reload(key_sizes,value_sizes,key,value,length,way);
 }
+
+/* extra-extra-copy*/
+void ocall_eextrac_flush(int key_size,int value_size, 
+    char key[], char value[]){
+  printf("in ocall_eextrac_flush\n");
+  do_flush_eextrac(key_size, value_size, key,value); 
+}
+
+void ocall_eextrac_nextKey(int key_size[],int value_size[],
+    char key[], char value[], int valid[], int fileIdx){
+  printf("in ocall_eextrac_nextKey\n");
+  do_reload_eextrac(key_size,value_size,key,value,valid,fileIdx);
+}
+
 
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
