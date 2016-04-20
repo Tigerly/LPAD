@@ -28,10 +28,12 @@ void bar1(const char *fmt, ...)
  */
 extern void EnclCompact(int file_count);
 extern void eextrac_EnclCompact(int file_count);
-int ecall_foo(int i)
+extern void onec_EnclCompact(int file_count,long user_arg);
+int ecall_foo(int i, long arg)
 {
-  EnclCompact(i);
+//  EnclCompact(i);
 //  eextrac_EnclCompact(i);
+  onec_EnclCompact(i,arg);
   return 3;
 }
 

@@ -11,7 +11,9 @@
 #include "App.h"
 #include "Enclave_u.h"
 
-int su_prepare(int argc, char* argv[], int *r);
+#define INPUT_BUFFER_SIZE 1024
+#define OUTPUT_BUFFER_SIZE 1024
+int su_prepare(int argc, char* argv[], int *r, long* user_arg);
 void su_cleanup();
 void do_reload(int key_sizes[],int value_sizes[],
     char key[], char value[], int length[], int channel);
@@ -21,12 +23,15 @@ void do_reload_eextrac(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx);
 void do_flush_eextrac(int key_size, int value_size, 
     char key[],char value[]);
+void do_reload_1c(int fileIdx);
+void do_flush_1c();
 
-int ecall_foo1(int file_count)
+
+int ecall_foo1(int file_count, long arg)
 {
   sgx_status_t ret = SGX_ERROR_UNEXPECTED;
   int retval;
-  ret = ecall_foo(global_eid, &retval, file_count);
+  ret = ecall_foo(global_eid, &retval, file_count, arg);
 
   if (ret != SGX_SUCCESS)
     abort();
@@ -250,7 +255,16 @@ void ocall_eextrac_nextKey(int key_size[],int value_size[],
   do_reload_eextrac(key_size,value_size,key,value,valid,fileIdx);
 }
 
+/* 1-copy*/
+void ocall_1c_flush(){
+  printf("in ocall_1c_flush\n");
+  do_flush_1c(); 
+}
 
+void ocall_1c_reload(int fileIdx){
+  printf("in ocall_1c_reload\n");
+  do_reload_1c(fileIdx);
+}
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -264,8 +278,9 @@ int SGX_CDECL main(int argc, char *argv[])
   /* Utilize trusted libraries */
   int retval;
   int file_count = 0 ;
-  su_prepare(argc, argv, &file_count);
-  retval=ecall_foo1(file_count);
+  long my_arg;
+  su_prepare(argc, argv, &file_count,&my_arg);
+  retval=ecall_foo1(file_count, my_arg);
   su_cleanup();
   printf("retval: %d\n", retval);
 

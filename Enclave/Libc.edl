@@ -13,7 +13,7 @@ enclave {
         /*
          * Utilize malloc/free in enclave.
          */
-        public int ecall_foo(int file_count);
+        public int ecall_foo(int file_count, long arg);
 
         /*
          * Utilize SGX version __cpuid() in enclave.

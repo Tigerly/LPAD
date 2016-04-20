@@ -46,6 +46,10 @@ enclave {
         [in] char key[32],
         [in] char value[100]
     );
+    void ocall_1c_reload(
+        int fileIdx);   
+    void ocall_1c_flush();
+
   };
 
 };
