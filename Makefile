@@ -107,8 +107,11 @@ else
 	Service_Library_Name := sgx_tservice
 	Crypto_Library_Name := sgx_tcrypto_opt
 endif
+Enclave_LevelDB_Files := Enclave/zerocpy/block.cpp \
+                         Enclave/zerocpy/coding.cpp \
+                         Enclave/zerocpy/iterator.cpp
 
-Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp
+Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_LevelDB_Files)
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)
