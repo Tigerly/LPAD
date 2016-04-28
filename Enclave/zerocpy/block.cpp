@@ -8,17 +8,16 @@
 
 #include <vector>
 #include <algorithm>
-#include "comparator.h"
 #include "format.h"
 #include "coding.h"
 
 
-inline uint32_t SUBlock::NumRestarts() const {
+inline uint32_t Block::NumRestarts() const {
   assert(size_ >= sizeof(uint32_t));
   return DecodeFixed32(data_ + size_ - sizeof(uint32_t));
 }
 
-SUBlock::SUBlock(const BlockContents& contents)
+Block::Block(const BlockContents& contents)
     : data_(contents.data.data()),
       size_(contents.data.size()),
       owned_(contents.heap_allocated) {
@@ -35,7 +34,7 @@ SUBlock::SUBlock(const BlockContents& contents)
   }
 }
 
-SUBlock::~SUBlock() {
+Block::~Block() {
   if (owned_) {
     delete[] data_;
   }
@@ -71,9 +70,8 @@ static inline const char* DecodeEntry(const char* p, const char* limit,
   return p;
 }
 
-class SUBlock::Iter : public Iterator {
+class Block::Iter : public Iterator {
  private:
-  const Comparator* const comparator_;
   const char* const data_;      // underlying block contents
   uint32_t const restarts_;     // Offset of restart array (list of fixed32)
   uint32_t const num_restarts_; // Number of uint32_t entries in restart array
@@ -86,7 +84,7 @@ class SUBlock::Iter : public Iterator {
   int status_;
 
   inline int Compare(const Slice& a, const Slice& b) const {
-    return comparator_->Compare(a, b);
+    return a.compare(b);
   }
 
   // Return the offset in data_ just past the end of the current entry.
@@ -110,12 +108,10 @@ class SUBlock::Iter : public Iterator {
   }
 
  public:
-  Iter(const Comparator* comparator,
-       const char* data,
+  Iter(const char* data,
        uint32_t restarts,
        uint32_t num_restarts)
-      : comparator_(comparator),
-        data_(data),
+      : data_(data),
         restarts_(restarts),
         num_restarts_(num_restarts),
         current_(restarts_),
@@ -159,6 +155,8 @@ class SUBlock::Iter : public Iterator {
       // Loop until end of current entry hits the start of original entry
     } while (ParseNextKey() && NextEntryOffset() < original);
   }
+  virtual void setFileIdx(int i) {}
+  virtual int getFileIdx() {return 0;}
 
   virtual void Seek(const Slice& target) {
     // Binary search in restart array to find the last restart point
@@ -251,7 +249,7 @@ class SUBlock::Iter : public Iterator {
   }
 };
 
-Iterator* SUBlock::NewIterator(const Comparator* cmp) {
+Iterator* Block::NewIterator() {
   if (size_ < sizeof(uint32_t)) {
     return NewErrorIterator();
   }
@@ -259,7 +257,7 @@ Iterator* SUBlock::NewIterator(const Comparator* cmp) {
   if (num_restarts == 0) {
     return NewEmptyIterator();
   } else {
-    return new Iter(cmp, data_, restart_offset_, num_restarts);
+    return new Iter(data_, restart_offset_, num_restarts);
   }
 }
 

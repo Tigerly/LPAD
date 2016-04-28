@@ -5,6 +5,7 @@
 #include "coding.h"
 
 
+
 void EncodeFixed32(char* buf, uint32_t value) {
     memcpy(buf, &value, sizeof(value));
 }
@@ -17,6 +18,10 @@ void PutFixed32(std::string* dst, uint32_t value) {
   char buf[sizeof(value)];
   EncodeFixed32(buf, value);
   dst->append(buf, sizeof(buf));
+}
+
+void PutFixed32_SU(char* buf, uint32_t value) {
+  memcpy(buf,&value,sizeof(value));
 }
 
 void PutFixed64(std::string* dst, uint64_t value) {
@@ -57,6 +62,14 @@ void PutVarint32(std::string* dst, uint32_t v) {
   char buf[5];
   char* ptr = EncodeVarint32(buf, v);
   dst->append(buf, ptr - buf);
+}
+
+int PutVarint32_SU(char* dst, uint32_t v) {
+  char buf[5];
+  char* ptr = EncodeVarint32(buf, v);
+//  dst->append(buf, ptr - buf);
+  memcpy(dst,buf,ptr-buf);
+  return ptr-buf;
 }
 
 char* EncodeVarint64(char* dst, uint64_t v) {

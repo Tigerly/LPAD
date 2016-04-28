@@ -29,14 +29,15 @@ void bar1(const char *fmt, ...)
 extern void EnclCompact(int file_count);
 extern void eextrac_EnclCompact(int file_count);
 extern void onec_EnclCompact(int file_count,long user_arg);
-int ecall_foo(int i, long arg)
+extern void zc_entry(int file_count,long user_arg1, long user_arg2);
+int ecall_foo(int i, long arg1, long arg2)
 {
 //  EnclCompact(i);
 //  eextrac_EnclCompact(i);
-  onec_EnclCompact(i,arg);
+  bar1("in ecall_foo\n");
+  zc_entry(i,arg1,arg2);
   return 3;
 }
-
 /* ecall_sgx_cpuid:
  *   Uses sgx_cpuid to get CPU features and types.
  */

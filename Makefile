@@ -48,24 +48,27 @@ else
 	Urts_Library_Name := sgx_urts
 endif
 
-LEVELDB_FILES := App/untrusted/leveldb_entry.cc \
-                 App/untrusted/file_system.cc \
-                 App/untrusted/table.cc \
-                 App/untrusted/format.cc \
-                 App/untrusted/block.cc \
-                 App/untrusted/coding.cc \
-                 App/untrusted/iterator.cc \
-                 App/untrusted/two_level_iterator.cc \
-                 App/untrusted/filter_block.cc \
-                 App/untrusted/options.cc \
-                 App/untrusted/comparator.cc \
-                 App/untrusted/port_posix.cc \
-                 App/untrusted/merger.cc \
-                 App/untrusted/table_builder.cc \
-                 App/untrusted/block_builder.cc \
-                 App/untrusted/crc32c.cc 
+LEVELDB_FILES := App/untrusted/leveldb_entry.cpp \
+                 App/untrusted/file_system.cpp \
+                 App/untrusted/table.cpp \
+                 App/untrusted/format.cpp \
+                 App/untrusted/block.cpp \
+                 App/untrusted/coding.cpp \
+                 App/untrusted/iterator.cpp \
+                 App/untrusted/two_level_iterator.cpp \
+                 App/untrusted/filter_block.cpp \
+                 App/untrusted/options.cpp \
+                 App/untrusted/comparator.cpp \
+                 App/untrusted/port_posix.cpp \
+                 App/untrusted/merger.cpp \
+                 App/untrusted/table_builder.cpp \
+                 App/untrusted/block_builder.cpp \
+                 App/untrusted/crc32c.cpp
 
-App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_FILES)
+LEVELDB_ZC_FILES := App/zerocpy/file_system.cpp \
+                    App/zerocpy/my_merge.cpp 
+
+App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_FILES) $(LEVELDB_ZC_FILES)
 
 App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include
 
@@ -107,11 +110,20 @@ else
 	Service_Library_Name := sgx_tservice
 	Crypto_Library_Name := sgx_tcrypto_opt
 endif
-Enclave_LevelDB_Files := Enclave/zerocpy/block.cpp \
+Enclave_zc_Files := Enclave/zerocpy/ecall_entry.cpp \
+                         Enclave/zerocpy/table.cpp \
+                         Enclave/zerocpy/block.cpp \
                          Enclave/zerocpy/coding.cpp \
-                         Enclave/zerocpy/iterator.cpp
+                         Enclave/zerocpy/format.cpp \
+                         Enclave/zerocpy/iterator.cpp \
+                         Enclave/zerocpy/two_level_iterator.cpp \
+                         Enclave/zerocpy/merger.cpp \
+                         Enclave/zerocpy/options.cpp \
+                         Enclave/zerocpy/table_builder.cpp \
+                         Enclave/zerocpy/block_builder.cpp \
+                         Enclave/zerocpy/crc32c.cpp
 
-Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_LevelDB_Files)
+Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_zc_Files)
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)

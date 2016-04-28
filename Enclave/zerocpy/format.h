@@ -89,8 +89,15 @@ struct BlockContents {
 // Read the block identified by "handle" from "file".  On failure
 // return non-OK.  On success fill *result and return OK.
 extern int ReadBlock(RandomAccessFile* file,
+                        int fileIdx,
                         const BlockHandle& handle,
-                        BlockContents* result);
+                        BlockContents* result,
+                        bool isIndex);
+extern int ReadBlockSU(int fileIdx,
+                        const BlockHandle& handle,
+                        BlockContents* result,
+                        bool isIndex, long private_data);
+
 
 // Implementation details follow.  Clients should ignore,
 

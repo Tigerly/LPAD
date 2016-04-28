@@ -13,15 +13,15 @@
 struct BlockContents;
 class Comparator;
 
-class SUBlock {
+class Block {
  public:
   // Initialize the block with the specified contents.
-  explicit SUBlock(const BlockContents& contents);
+  explicit Block(const BlockContents& contents);
 
-  ~SUBlock();
+  ~Block();
 
   size_t size() const { return size_; }
-  Iterator* NewIterator(const Comparator* comparator);
+  Iterator* NewIterator();
 
  private:
   uint32_t NumRestarts() const;
@@ -32,8 +32,8 @@ class SUBlock {
   bool owned_;                  // Block owns data_[]
 
   // No copying allowed
-  SUBlock(const SUBlock&);
-  void operator=(const SUBlock&);
+  Block(const Block&);
+  void operator=(const Block&);
 
   class Iter;
 };

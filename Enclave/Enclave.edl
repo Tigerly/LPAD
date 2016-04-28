@@ -49,7 +49,19 @@ enclave {
     void ocall_1c_reload(
         int fileIdx);   
     void ocall_1c_flush();
-
+    int ocall_read(uint64_t offset, 
+                   size_t size, 
+                   [out] int length[1],
+                   int fileIdx,
+                   [out] char space[100]);
+    int ocall_read_nospace(uint64_t offset, 
+                   size_t size, 
+                   [out] int length[1],
+                   int fileIdx,
+                   int isIndex);
+    int ocall_file_flush();
+    int ocall_append([in] char space[100], size_t size);
+    int ocall_append_nospace(int block_type, size_t size);
   };
 
 };

@@ -14,12 +14,16 @@
 #include <string.h>
 #include <string>
 #include "slice.h"
+//#include "port.h"
 
 
 // Standard Put... routines append to a string
 extern void PutFixed32(std::string* dst, uint32_t value);
 extern void PutFixed64(std::string* dst, uint64_t value);
+extern void PutFixed32_SU(char* buf, uint32_t value);
+extern void PutFixed64_SU(char* buf, uint64_t value);
 extern void PutVarint32(std::string* dst, uint32_t value);
+extern int PutVarint32_SU(char* dst, uint32_t value);
 extern void PutVarint64(std::string* dst, uint64_t value);
 extern void PutLengthPrefixedSlice(std::string* dst, const Slice& value);
 
@@ -60,6 +64,7 @@ inline uint32_t DecodeFixed32(const char* ptr) {
 }
 
 inline uint64_t DecodeFixed64(const char* ptr) {
+    // Load the raw bytes
     uint64_t result;
     memcpy(&result, ptr, sizeof(result));  // gcc optimizes this to a plain load
     return result;

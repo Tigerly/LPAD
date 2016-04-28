@@ -15,6 +15,8 @@
 #define OUTPUT_BUFFER_SIZE 1024
 int su_prepare(int argc, char* argv[], int *r, long* user_arg);
 void su_cleanup();
+int su_prepare_zc(int argc, char* argv[], int *r, long* user_arg1, long *user_arg2);
+void su_cleanup_zc();
 void do_reload(int key_sizes[],int value_sizes[],
     char key[], char value[], int length[], int channel);
 void do_flush(int key_sizes[], int value_sizes[], 
@@ -25,13 +27,19 @@ void do_flush_eextrac(int key_size, int value_size,
     char key[],char value[]);
 void do_reload_1c(int fileIdx);
 void do_flush_1c();
+int do_read(uint64_t offset, size_t size, int length[1], int fileIdx, char space[100]);
+int do_read_nospace(uint64_t offset, size_t size, int length[1], int fileIdx, int isIndex);
+int do_file_flush();
+int do_append(char space[100],size_t size);
+int do_append_nospace(int block_type,size_t size);
 
 
-int ecall_foo1(int file_count, long arg)
+
+int ecall_foo1(int file_count, long arg1, long arg2)
 {
   sgx_status_t ret = SGX_ERROR_UNEXPECTED;
   int retval;
-  ret = ecall_foo(global_eid, &retval, file_count, arg);
+  ret = ecall_foo(global_eid, &retval, file_count, arg1, arg2);
 
   if (ret != SGX_SUCCESS)
     abort();
@@ -265,6 +273,27 @@ void ocall_1c_reload(int fileIdx){
   printf("in ocall_1c_reload\n");
   do_reload_1c(fileIdx);
 }
+
+/* no copy*/
+int ocall_read(uint64_t offset, size_t size, int length[1], int fileIdx, char space[100]) {
+  return  do_read(offset,size,length,fileIdx,space);
+}
+
+int ocall_read_nospace(uint64_t offset, size_t size, int length[1], int fileIdx, int isIndex) {
+  return do_read_nospace(offset,size,length,fileIdx,isIndex);
+}
+
+int ocall_file_flush() {
+  return do_file_flush();
+}
+
+int ocall_append(char space[100], size_t size) {
+  return do_append(space,size);
+}
+
+int ocall_append_nospace(int block_type, size_t size) {
+  return do_append_nospace(block_type,size);
+}
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -278,10 +307,14 @@ int SGX_CDECL main(int argc, char *argv[])
   /* Utilize trusted libraries */
   int retval;
   int file_count = 0 ;
-  long my_arg;
-  su_prepare(argc, argv, &file_count,&my_arg);
-  retval=ecall_foo1(file_count, my_arg);
-  su_cleanup();
+//  long my_arg;
+//  su_prepare(argc, argv, &file_count,&my_arg);
+//  retval=ecall_foo1(file_count, my_arg);
+//  su_cleanup();
+  long my_arg1,my_arg2;
+  su_prepare_zc(argc, argv, &file_count,&my_arg1,&my_arg2);
+  retval=ecall_foo1(file_count,my_arg1,my_arg2);
+  su_cleanup_zc();
   printf("retval: %d\n", retval);
 
   /* Destroy the enclave */

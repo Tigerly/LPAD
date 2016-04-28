@@ -65,6 +65,9 @@ class Iterator {
   // If an error has occurred, return it.  Else return an ok status.
   virtual int status() const = 0;
 
+  virtual void setFileIdx(int i)  = 0;
+  virtual int getFileIdx()  = 0;
+
   // Clients are allowed to register function/arg1/arg2 triples that
   // will be invoked when this iterator is destroyed.
   //
