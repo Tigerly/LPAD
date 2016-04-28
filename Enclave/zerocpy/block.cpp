@@ -157,6 +157,7 @@ class Block::Iter : public Iterator {
   }
   virtual void setFileIdx(int i) {}
   virtual int getFileIdx() {return 0;}
+  int getCurrentIdx() {return 0;}
 
   virtual void Seek(const Slice& target) {
     // Binary search in restart array to find the last restart point

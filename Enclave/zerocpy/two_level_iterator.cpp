@@ -31,6 +31,7 @@ class TwoLevelIterator: public Iterator {
   virtual void Prev();
   virtual void setFileIdx(int i) {fileIdx = i;}
   virtual int getFileIdx() {return fileIdx;}
+  virtual int getCurrentIdx() {return 0;}
 
 
   virtual bool Valid() const {

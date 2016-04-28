@@ -49,6 +49,7 @@ class EmptyIterator : public Iterator {
   virtual void Prev() { assert(false); }
   virtual void setFileIdx(int i) {}
   virtual int getFileIdx() {return 0;}
+  virtual int getCurrentIdx() {return 0;}
   Slice key() const { assert(false); return Slice(); }
   Slice value() const { assert(false); return Slice(); }
   virtual int status() const { return status_; }
