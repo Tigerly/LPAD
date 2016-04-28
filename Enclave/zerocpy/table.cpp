@@ -45,7 +45,6 @@ int Table::Open_SU(
   char footer_space[100];
   int length;
   int res = 0;
-  bar1("footer length=%d\n",Footer::kEncodedLength);
   ocall_read(&res,size - Footer::kEncodedLength, Footer::kEncodedLength,
       &length, fileIdx, footer_space);
   if (res!=0) return res;

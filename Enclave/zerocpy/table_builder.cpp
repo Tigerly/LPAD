@@ -239,7 +239,6 @@ void TableBuilder::WriteRawBlock(const Slice& block_contents,
   ocall_append_nospace(&r->status,block_type,block_contents.size());
   if (r->status==0) {
     char trailer[100];
-    bar1("block trailer size=%d\n",kBlockTrailerSize);
     trailer[0] = type;
     uint32_t crc = crc32c::Value(block_contents.data(), block_contents.size());
     crc = crc32c::Extend(crc, trailer, 1);  // Extend crc to cover block type

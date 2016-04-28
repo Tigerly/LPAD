@@ -121,7 +121,8 @@ Enclave_zc_Files := Enclave/zerocpy/ecall_entry.cpp \
                          Enclave/zerocpy/options.cpp \
                          Enclave/zerocpy/table_builder.cpp \
                          Enclave/zerocpy/block_builder.cpp \
-                         Enclave/zerocpy/crc32c.cpp
+                         Enclave/zerocpy/crc32c.cpp \
+                         Enclave/zerocpy/sha3.cpp
 
 Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_zc_Files)
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport

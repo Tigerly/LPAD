@@ -8,7 +8,7 @@
 #include "iterator_wrapper.h"
 
 
-namespace {
+//namespace {
 class MergingIterator : public Iterator {
  public:
   MergingIterator(Iterator** children, int n)
@@ -130,6 +130,8 @@ class MergingIterator : public Iterator {
     }
     return status;
   }
+  
+  int getCurrentIdx() {return current_file_index;}
 
  private:
   void FindSmallest();
@@ -140,6 +142,7 @@ class MergingIterator : public Iterator {
   // of children in leveldb.
   IteratorWrapper* children_;
   int n_;
+  int current_file_index;
   IteratorWrapper* current_;
 
   // Which direction is the iterator moving?
@@ -157,8 +160,10 @@ void MergingIterator::FindSmallest() {
     if (child->Valid()) {
       if (smallest == NULL) {
         smallest = child;
+        current_file_index = i;
       } else if (child->key().compare(smallest->key()) < 0) {
         smallest = child;
+        current_file_index = i;
       }
     }
   }
@@ -179,7 +184,7 @@ void MergingIterator::FindLargest() {
   }
   current_ = largest;
 }
-}  // namespace
+//}  // namespace
 
 Iterator* NewMergingIterator(Iterator** list, int n) {
   assert(n >= 0);

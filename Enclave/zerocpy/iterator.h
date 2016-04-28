@@ -67,6 +67,7 @@ class Iterator {
 
   virtual void setFileIdx(int i)  = 0;
   virtual int getFileIdx()  = 0;
+  virtual int getCurrentIdx() = 0;
 
   // Clients are allowed to register function/arg1/arg2 triples that
   // will be invoked when this iterator is destroyed.
