@@ -32,7 +32,7 @@ int do_read_nospace(uint64_t offset, size_t size, int length[1], int fileIdx, in
       mem = my_mem.index_mem[fileIdx];
   } else {
       mem = my_mem.mem[fileIdx];
-  } 
+  }
   return file_list[fileIdx]->ReadSU(offset,size,length,mem);
 }
 

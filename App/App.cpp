@@ -6,6 +6,7 @@
 # include <pwd.h>
 # define MAX_PATH FILENAME_MAX
 # include <time.h>
+# include <sys/time.h>
 #include "sgx_urts.h"
 #include "sgx_status.h"
 #include "App.h"
@@ -302,26 +303,24 @@ int SGX_CDECL main(int argc, char *argv[])
   int file_count = 0 ;
 #if NONCPY
   long my_arg1,my_arg2;
-  clock_t start,end;
-  double cpu_time;
+  struct timeval start,end;
   su_prepare_zc(argc, argv, &file_count,&my_arg1,&my_arg2);
-  start = clock();
+  gettimeofday(&start,NULL);
   retval=ecall_foo1(file_count,my_arg1,my_arg2);
   su_cleanup_zc();
-  end = clock();
-  cpu_time = ((double)(end-start))/CLOCKS_PER_SEC;
-  printf("cpu_time=%lf\n",cpu_time);
+  gettimeofday(&end,NULL);
+  printf("%ld\n", ((end.tv_sec * 1000000 + end.tv_usec)
+      - (start.tv_sec * 1000000 + start.tv_usec)));
 #else
   long my_arg;
-  clock_t start,end;
-  double cpu_time;
+  struct timeval start,end;
   su_prepare(argc, argv, &file_count,&my_arg);
-  start = clock();
+  gettimeofday(&start,NULL);
   retval=ecall_foo1(file_count, my_arg,0);
   su_cleanup();
-  end = clock();
-  cpu_time = ((double)(end-start))/CLOCKS_PER_SEC;
-  printf("cpu_time=%lf\n",cpu_time);
+  gettimeofday(&end,NULL);
+  printf("%ld\n", ((end.tv_sec * 1000000 + end.tv_usec)
+      - (start.tv_sec * 1000000 + start.tv_usec)));
 #endif
   printf("retval: %d\n", retval);
 

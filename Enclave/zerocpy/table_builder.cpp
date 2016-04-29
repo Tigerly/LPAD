@@ -174,7 +174,6 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
 
   const size_t estimated_block_size = r->data_block.CurrentSizeEstimate();
   if (estimated_block_size >= r->options.block_size) {
-    bar1("flush at %d entries\n",r->num_entries);
     Flush();
   }
 }
