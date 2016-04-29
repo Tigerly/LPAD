@@ -1,6 +1,6 @@
 #include "Enclave_t.h"  /* bar*/
 #include "Enclave.h"  /* bar1*/
-
+#include <string.h>
 #define INPUT_BUFFER_SIZE 1024
 #define OUTPUT_BUFFER_SIZE 1024
 
@@ -25,7 +25,6 @@ struct enclave_g_arg_t *cookie;
 
 int onec_readKV(int channel) {
   if (cookie->in_index[channel] == INPUT_BUFFER_SIZE || cookie->in_index[channel] == -1) {
-    bar1("in 1c_readKV and try to reload\n");
     ocall_1c_reload(channel);
     cookie->in_index[channel] = -1;
     if (cookie->data_count[channel] == 0) {
@@ -47,7 +46,6 @@ int onec_writeKV(int channel) {
   int out_start=0;
   int input_start=0;
   if (cookie->out_index==OUTPUT_BUFFER_SIZE) {
-    bar1("in 1c_writeKV and try to flush\n");
     ocall_1c_flush();
     cookie->out_index = 0;
   }
@@ -69,12 +67,13 @@ int onec_writeKV(int channel) {
 }
 
 int onec_my_compare(void* src1, void* src2, int n) {
-  int res = 0;
-  for (int i=0;i<n;i++) {
-    if (*(unsigned char *)src1 == *(unsigned char *)src2) {src1=src1+1;src2=src2+1;}
-    else if (*(unsigned char *)src1 < *(unsigned char *)src2) return -1;
-    else return 1;
-  }
+ // int res = 0;
+ // for (int i=0;i<n;i++) {
+ //   if (*(unsigned char *)src1 == *(unsigned char *)src2) {src1=src1+1;src2=src2+1;}
+ //   else if (*(unsigned char *)src1 < *(unsigned char *)src2) return -1;
+ //   else return 1;
+ // }
+  return memcmp(src1,src2,n);
 }
 
 inline int onec_compare(int i, int s)  {

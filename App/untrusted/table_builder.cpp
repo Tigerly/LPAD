@@ -48,6 +48,7 @@ struct TableBuilder::Rep {
         index_block_options(opt),
         file(f),
         offset(0),
+        status(0),
         data_block(&options),
         index_block(&index_block_options),
         num_entries(0),
