@@ -9,7 +9,6 @@ int valid[10];
 
 
 int eextrac_readKV(int channel) {
-  bar1("in readKV and try to reload\n");
   ocall_eextrac_nextKey(&ee_key_sizes[channel],&ee_value_sizes[channel],
       ee_key_data[channel],ee_value_data[channel],
       &valid[channel],channel);
@@ -19,7 +18,6 @@ int eextrac_readKV(int channel) {
 
 
 void eextrac_writeKV(int channel) {
-    bar1("in writeKV and try to flush\n");
     ocall_eextrac_flush(ee_key_sizes[channel],ee_value_sizes[channel],
         ee_key_data[channel],ee_value_data[channel]);
 }

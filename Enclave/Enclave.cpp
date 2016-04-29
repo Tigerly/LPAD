@@ -33,9 +33,8 @@ extern void zc_entry(int file_count,long user_arg1, long user_arg2);
 int ecall_foo(int i, long arg1, long arg2)
 {
 //  EnclCompact(i);
-//  eextrac_EnclCompact(i);
-  bar1("in ecall_foo\n");
-  zc_entry(i,arg1,arg2);
+  eextrac_EnclCompact(i);
+//  zc_entry(i,arg1,arg2);
   return 3;
 }
 /* ecall_sgx_cpuid:

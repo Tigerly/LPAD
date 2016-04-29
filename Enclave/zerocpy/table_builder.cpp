@@ -14,7 +14,7 @@
 
 struct out_mem {
   char data_block[1000000];
-  char index_block[100000];
+  char index_block[1000000];
   char meta_block[1000];
 };
 
@@ -236,6 +236,7 @@ void TableBuilder::WriteRawBlock(const Slice& block_contents,
   Rep* r = rep_;
   handle->set_offset(r->offset);
   handle->set_size(block_contents.size());
+  if (block_type==1) bar1("write index block size=%d\n",block_contents.size());
   ocall_append_nospace(&r->status,block_type,block_contents.size());
   if (r->status==0) {
     char trailer[100];

@@ -4,6 +4,7 @@
 
 #include "format.h"
 #include "Enclave_t.h"
+#include "Enclave.h"
 //#include "port.h"
 #include "block.h"
 #include "coding.h"
@@ -12,10 +13,8 @@
 #include "options.h"
 #include <stdio.h>
 struct g_mem {
-  char index_mem1[100000000];
-  char index_mem2[100000000];
-  char mem1[10000000];
-  char mem2[10000000];
+  char index_mem[10][100000000];
+  char mem[10][10000000];
   uint64_t  file_size[2];
 };
 
@@ -84,15 +83,9 @@ int ReadBlockSU(int fileIdx,
   char* mem;
   int length;
   if (isIndex) { 
-    if (fileIdx==0)
-      mem = ((struct g_mem*)private_data)->index_mem1;
-    else 
-      mem = ((struct g_mem*)private_data)->index_mem2;
+      mem = ((struct g_mem*)private_data)->index_mem[fileIdx];
   } else {
-    if (fileIdx==0)
-      mem = ((struct g_mem*)private_data)->mem1;
-    else 
-      mem = ((struct g_mem*)private_data)->mem2;
+      mem = ((struct g_mem*)private_data)->mem[fileIdx];
   }
   ocall_read_nospace(&res, handle.offset(), n + kBlockTrailerSize, &length, fileIdx, isIndex);
   Slice contents = Slice(mem,length);

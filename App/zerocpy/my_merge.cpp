@@ -4,17 +4,15 @@
 #include <stdlib.h>
 #include <vector>
 struct g_mem {
-  char index_mem1[100000000];
-  char index_mem2[100000000];
-  char mem1[10000000];
-  char mem2[10000000];
-  uint64_t  file_size[2];
+  char index_mem[10][100000000];
+  char mem[10][10000000];
+  uint64_t  file_size[10];
 };
 struct g_mem my_mem;
 
 struct out_mem {
   char data_block[1000000];
-  char index_block[100000];
+  char index_block[1000000];
   char meta_block[1000];
 };
 
@@ -31,15 +29,9 @@ int do_read(uint64_t offset, size_t size, int length[1], int fileIdx, char space
 int do_read_nospace(uint64_t offset, size_t size, int length[1], int fileIdx, int isIndex) {
   char* mem;
   if (isIndex) { 
-    if (fileIdx==0)
-      mem = my_mem.index_mem1;
-    else 
-      mem = my_mem.index_mem2;
+      mem = my_mem.index_mem[fileIdx];
   } else {
-    if (fileIdx==0)
-      mem = my_mem.mem1;
-    else 
-      mem = my_mem.mem2;
+      mem = my_mem.mem[fileIdx];
   } 
   return file_list[fileIdx]->ReadSU(offset,size,length,mem);
 }
@@ -78,7 +70,7 @@ int su_prepare_zc(int argc, char* argv[], int* r, long* arg1, long* arg2){
 
 
   /* build output file */
-  std::string outname = "output.ldb";
+  std::string outname = "/home/ju/test_data/output.ldb";
   zcNewWritableFile(outname,&zcOutfile);
   
 #if 0

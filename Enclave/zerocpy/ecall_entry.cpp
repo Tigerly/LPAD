@@ -11,18 +11,16 @@ using namespace std;
 class TwoLevelIterator;
 class MergingIterator;
 struct g_mem {
-  char index_mem1[100000000];
-  char index_mem2[100000000];
-  char mem1[10000000];
-  char mem2[10000000];
-  uint64_t  file_size[2];
+  char index_mem[10][100000000];
+  char mem[10][10000000];
+  uint64_t  file_size[10];
 };
 
 struct mht_node {
   unsigned char digest[20];
 };
 
-#define MERKLE_TREE 0
+#define MERKLE_TREE 1
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
 void insert(struct mht_node** tree, const char* message, int message_len) {

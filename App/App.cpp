@@ -5,7 +5,7 @@
 # include <unistd.h>
 # include <pwd.h>
 # define MAX_PATH FILENAME_MAX
-
+# include <time.h>
 #include "sgx_urts.h"
 #include "sgx_status.h"
 #include "App.h"
@@ -13,6 +13,7 @@
 
 #define INPUT_BUFFER_SIZE 1024
 #define OUTPUT_BUFFER_SIZE 1024
+#define NONCPY 0
 int su_prepare(int argc, char* argv[], int *r, long* user_arg);
 void su_cleanup();
 int su_prepare_zc(int argc, char* argv[], int *r, long* user_arg1, long *user_arg2);
@@ -34,7 +35,6 @@ int do_append(char space[100],size_t size);
 int do_append_nospace(int block_type,size_t size);
 
 
-
 int ecall_foo1(int file_count, long arg1, long arg2)
 {
   sgx_status_t ret = SGX_ERROR_UNEXPECTED;
@@ -50,7 +50,6 @@ int ecall_foo1(int file_count, long arg1, long arg2)
     abort();
   return retval;
 }
-
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 
@@ -240,37 +239,31 @@ void ocall_bar(const char *str)
 
 void ocall_flush(int key_sizes[],int value_sizes[], 
     char key[], char value[],int length){
-  printf("in ocall_flush\n");
   do_flush(key_sizes, value_sizes, key,value,length); 
 }
 
 void ocall_reload(int key_sizes[],int value_sizes[],
     char key[], char value[], int length[], int way){
-  printf("in ocall_reload\n");
   do_reload(key_sizes,value_sizes,key,value,length,way);
 }
 
 /* extra-extra-copy*/
 void ocall_eextrac_flush(int key_size,int value_size, 
     char key[], char value[]){
-  printf("in ocall_eextrac_flush\n");
   do_flush_eextrac(key_size, value_size, key,value); 
 }
 
 void ocall_eextrac_nextKey(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx){
-  printf("in ocall_eextrac_nextKey\n");
   do_reload_eextrac(key_size,value_size,key,value,valid,fileIdx);
 }
 
 /* 1-copy*/
 void ocall_1c_flush(){
-  printf("in ocall_1c_flush\n");
   do_flush_1c(); 
 }
 
 void ocall_1c_reload(int fileIdx){
-  printf("in ocall_1c_reload\n");
   do_reload_1c(fileIdx);
 }
 
@@ -307,14 +300,29 @@ int SGX_CDECL main(int argc, char *argv[])
   /* Utilize trusted libraries */
   int retval;
   int file_count = 0 ;
-//  long my_arg;
-//  su_prepare(argc, argv, &file_count,&my_arg);
-//  retval=ecall_foo1(file_count, my_arg);
-//  su_cleanup();
+#if NONCPY
   long my_arg1,my_arg2;
+  clock_t start,end;
+  double cpu_time;
   su_prepare_zc(argc, argv, &file_count,&my_arg1,&my_arg2);
+  start = clock();
   retval=ecall_foo1(file_count,my_arg1,my_arg2);
   su_cleanup_zc();
+  end = clock();
+  cpu_time = ((double)(end-start))/CLOCKS_PER_SEC;
+  printf("cpu_time=%lf\n",cpu_time);
+#else
+  long my_arg;
+  clock_t start,end;
+  double cpu_time;
+  su_prepare(argc, argv, &file_count,&my_arg);
+  start = clock();
+  retval=ecall_foo1(file_count, my_arg,0);
+  su_cleanup();
+  end = clock();
+  cpu_time = ((double)(end-start))/CLOCKS_PER_SEC;
+  printf("cpu_time=%lf\n",cpu_time);
+#endif
   printf("retval: %d\n", retval);
 
   /* Destroy the enclave */
@@ -322,4 +330,5 @@ int SGX_CDECL main(int argc, char *argv[])
   printf("Info: SampleEnclave successfully returned.\n");
   return 0;
 }
+
 
