@@ -174,6 +174,7 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
 
   const size_t estimated_block_size = r->data_block.CurrentSizeEstimate();
   if (estimated_block_size >= r->options.block_size) {
+    bar1("flush at %d entries\n",r->num_entries);
     Flush();
   }
 }
@@ -236,7 +237,7 @@ void TableBuilder::WriteRawBlock(const Slice& block_contents,
   Rep* r = rep_;
   handle->set_offset(r->offset);
   handle->set_size(block_contents.size());
-  if (block_type==1) bar1("write index block size=%d\n",block_contents.size());
+ // if (block_type==0) bar1("write data block size=%d\n",block_contents.size());
   ocall_append_nospace(&r->status,block_type,block_contents.size());
   if (r->status==0) {
     char trailer[100];

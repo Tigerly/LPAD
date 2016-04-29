@@ -34,8 +34,8 @@ int ecall_foo(int i, long arg1, long arg2)
 {
 //  EnclCompact(i);
 //  eextrac_EnclCompact(i);
-  onec_EnclCompact(i,arg1);
-//  zc_entry(i,arg1,arg2);
+//  onec_EnclCompact(i,arg1);
+  zc_entry(i,arg1,arg2);
   return 3;
 }
 /* ecall_sgx_cpuid:
