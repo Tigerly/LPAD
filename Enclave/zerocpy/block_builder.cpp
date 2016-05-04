@@ -27,7 +27,8 @@
 // restarts[i] contains the offset within the block of the ith restart point.
 
 #include "block_builder.h"
-
+#include "Enclave_t.h"
+#include "Enclave.h"
 #include <algorithm>
 #include <assert.h>
 //#include "comparator.h"
@@ -45,6 +46,11 @@ BlockBuilder::BlockBuilder(const Options* options, int i, char* buf)
       finished_(false) {
   assert(options->block_restart_interval >= 1);
   restarts_.push_back(0);       // First restart point is at offset 0
+  if (block_type==1) {
+      restarts_index = (uint32_t *)malloc(100000*sizeof(uint32_t));
+      restarts_pointer = 1;
+      restarts_index[0] = 0;
+  }
 }
 
 BlockBuilder::BlockBuilder(const Options* options)
@@ -61,12 +67,20 @@ void BlockBuilder::Reset() {
 //  buffer_.clear();
   restarts_.clear();
   restarts_.push_back(0);       // First restart point is at offset 0
+  if (block_type == 1) {
+    restarts_index[0] = 0;
+    restarts_pointer = 1;
+  }
   counter_ = 0;
   finished_ = false;
   last_key_.clear();
 }
 
 size_t BlockBuilder::CurrentSizeEstimate() const {
+  if (block_type==1)
+  return (buffer_pointer +                        // Raw data buffer
+          restarts_pointer * sizeof(uint32_t) +   // Restart array
+          sizeof(uint32_t));                      // Restart array length
   return (buffer_pointer +                        // Raw data buffer
           restarts_.size() * sizeof(uint32_t) +   // Restart array
           sizeof(uint32_t));                      // Restart array length
@@ -77,17 +91,32 @@ size_t BlockBuilder::CurrentSizeEstimate() const {
 }
 
 Slice BlockBuilder::Finish() {
-  // Append restart array
-  for (size_t i = 0; i < restarts_.size(); i++) {
+  if (block_type == 1) {
+    bar1("restarts_size=%u\n",restarts_pointer);
+    for (size_t i = 0; i < restarts_pointer; i++) {
+      PutFixed32_SU(b_SU+buffer_pointer,restarts_index[i]);
+      buffer_pointer+=4;
+    }
+
+  }
+  else{
+    // Append restart array
+    for (size_t i = 0; i < restarts_.size(); i++) {
       PutFixed32_SU(b_SU+buffer_pointer,restarts_[i]);
       buffer_pointer+=4;
-//char buffer
-    //  PutFixed32(&buffer_, restarts_[i]);
-      
+      //char buffer
+      //  PutFixed32(&buffer_, restarts_[i]);
+
+    }
   }
 #if CHAR_BUFFER
-  PutFixed32_SU(b_SU+buffer_pointer, restarts_.size());
-  buffer_pointer+=4;
+  if (block_type == 1) {
+    PutFixed32_SU(b_SU+buffer_pointer, restarts_pointer);
+    buffer_pointer+=4;
+  } else {
+    PutFixed32_SU(b_SU+buffer_pointer, restarts_.size());
+    buffer_pointer+=4;
+  }
 #else
   PutFixed32(&buffer_, restarts_.size());
 #endif
@@ -120,14 +149,19 @@ void BlockBuilder::Add(const Slice& key, const Slice& value) {
   } else {
     // Restart compression
 #if CHAR_BUFFER
-    restarts_.push_back(buffer_pointer);
+    if (block_type == 1) {
+      restarts_index[restarts_pointer] = buffer_pointer;
+      restarts_pointer++;
+    }
+    else {
+      restarts_.push_back(buffer_pointer);
+    }
 #else
      restarts_.push_back(buffer_.size());
 #endif
     counter_ = 0;
   }
   const size_t non_shared = key.size() - shared;
-
   // Add "<shared><non_shared><value_size>" to buffer_
 #if CHAR_BUFFER
   buffer_pointer+=PutVarint32_SU(b_SU+buffer_pointer, shared);

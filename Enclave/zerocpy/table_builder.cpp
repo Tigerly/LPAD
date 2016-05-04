@@ -14,7 +14,7 @@
 
 struct out_mem {
   char data_block[1000000];
-  char index_block[1000000];
+  char index_block[10000000];
   char meta_block[1000];
 };
 
