@@ -21,6 +21,7 @@ enclave {
    */
   untrusted {
     void ocall_bar([in, string] const  char *str);
+/*
     void ocall_reload([out] int key_sizes[1024],
         [out] int value_sizes[1024],
         [out] char key[32768],
@@ -33,19 +34,6 @@ enclave {
         [in] char key[32768],
         [in] char value[102400],
         int length);
-    void ocall_eextrac_nextKey(
-        [out] int key_size[1],
-        [out] int value_size[1],
-        [out] char key[32],
-        [out] char value[100],
-        [out] int valid[1],        
-        int fileIdx);
-    void ocall_eextrac_flush(
-        int key_size,
-        int value_size,
-        [in] char key[32],
-        [in] char value[100]
-    );
     void ocall_1c_reload(
         int fileIdx);   
     void ocall_1c_flush();
@@ -62,6 +50,20 @@ enclave {
     int ocall_file_flush();
     int ocall_append([in] char space[100], size_t size);
     int ocall_append_nospace(int block_type, size_t size);
-  };
+*/
+     void ocall_eextrac_nextKey(
+        [out] int key_size[1],
+        [out] int value_size[1],
+        [out] char key[32],
+        [out] char value[100],
+        [out] int valid[1],        
+        int fileIdx);
+    void ocall_eextrac_flush(
+        int key_size,
+        int value_size,
+        [in] char key[32],
+        [in] char value[100]
+    );
+ };
 
 };

@@ -1,6 +1,6 @@
 #include "Enclave_t.h"  /* bar*/
 #include "Enclave.h"  /* bar1*/
-
+#include <string.h>
 int ee_key_sizes[10];
 int ee_value_sizes[10];
 char ee_key_data[10][32];
@@ -23,18 +23,19 @@ void eextrac_writeKV(int channel) {
 }
 
 int eextrac_my_compare(void* src1, void* src2, int n) {
-  int res = 0;
-  for (int i=0;i<n;i++) {
-    if (*(unsigned char *)src1 == *(unsigned char *)src2) {src1=src1+1;src2=src2+1;}
-    else if (*(unsigned char *)src1 < *(unsigned char *)src2) return -1;
-    else return 1;
-  }
+//  int res = 0;
+//  for (int i=0;i<n;i++) {
+//    if (*(unsigned char *)src1 == *(unsigned char *)src2) {src1=src1+1;src2=src2+1;}
+ //   else if (*(unsigned char *)src1 < *(unsigned char *)src2) return -1;
+  //  else return 1;
+//  }
+  return memcmp(src1,src2,n);
 }
 
 inline int eextrac_compare(int i, int s)  {
   // Slice  key_i(&ee_key_data[i][index_i<<5], ee_key_sizes[i][index_i]);
   // Slice  key_s(&ee_key_data[s][index_s<<5], ee_key_sizes[s][index_s]);
-  return eextrac_my_compare(ee_key_data[i],ee_key_data[s],16);
+  return eextrac_my_compare(ee_key_data[i],ee_key_data[s],24);
 }
 
 int eextrac_findSmallest(int n_ways) {
@@ -58,7 +59,6 @@ void eextrac_EnclCompact(int file_count)
 {
   int i=0;
   int count = file_count;
-  bar1("in enclcompact and file_count=%d\n",count);
   int next;
   for (int i=0;i<file_count;i++)
     eextrac_readKV(i);
