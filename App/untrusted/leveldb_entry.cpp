@@ -107,9 +107,9 @@ void do_reload_eextrac(int key_size[],int value_size[],
 void do_flush_1c() {
   int i=0;
   for (i=0;i<my_arg.out_index;i++) {
-    Slice key(&(my_arg.out_key[i<<5]),my_arg.out_key_sizes[i]);
-    Slice value(&(my_arg.out_value[i*100]),my_arg.out_value_sizes[i]);
-    builder->Add(key,value);
+    slice key(&(my_arg.out_key[i<<5]),my_arg.out_key_sizes[i]);
+    slice value(&(my_arg.out_value[i*100]),my_arg.out_value_sizes[i]);
+    builder->add(key,value);
   }
 }
 

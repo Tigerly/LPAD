@@ -51,6 +51,9 @@ enclave {
     int ocall_append([in] char space[100], size_t size);
     int ocall_append_nospace(int block_type, size_t size);
 */
+    void ocall_1c_reload(
+        int fileIdx);   
+    void ocall_1c_flush();
      void ocall_eextrac_nextKey(
         [out] int key_size[1],
         [out] int value_size[1],

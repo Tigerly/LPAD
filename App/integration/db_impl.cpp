@@ -32,6 +32,8 @@
 #include "coding.h"
 #include "logging.h"
 #include "mutexlock.h"
+#define INPUT_BUFFER_SIZE 1024
+#define OUTPUT_BUFFER_SIZE 1024
 int ecall_foo1(int file_count, long arg1, long arg2);
 leveldb::Iterator** g_list;
 leveldb::DBImpl* myInstance;
@@ -39,6 +41,57 @@ std::string g_current_user_key;
 bool g_has_current_user_key = false;
 leveldb::DBImpl::CompactionState *g_compact;
 leveldb::SequenceNumber g_last_sequence_for_key = leveldb::kMaxSequenceNumber;
+struct g_arg_t {
+  int key_sizes[10][INPUT_BUFFER_SIZE];
+  int value_sizes[10][INPUT_BUFFER_SIZE];
+  char key_data[10][INPUT_BUFFER_SIZE*32];
+  char value_data[10][INPUT_BUFFER_SIZE*100];
+  int in_index[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+  int data_count[10];
+
+  char out_key[32*OUTPUT_BUFFER_SIZE];
+  int out_key_sizes[OUTPUT_BUFFER_SIZE];
+  char out_value[OUTPUT_BUFFER_SIZE*100];
+  int out_value_sizes[OUTPUT_BUFFER_SIZE];
+  int out_index=0;
+};
+
+struct g_arg_t my_arg;
+
+void do_flush_1c() {
+  int i=0;
+  for (i=0;i<my_arg.out_index;i++) {
+    leveldb::Slice key_slice(&(my_arg.out_key[i<<5]),my_arg.out_key_sizes[i]);
+    leveldb::Slice value_slice(&(my_arg.out_value[i*100]),my_arg.out_value_sizes[i]);
+    myInstance->SU_flush_data(key_slice,value_slice,g_compact,&g_current_user_key,&g_has_current_user_key,&g_last_sequence_for_key);
+  }
+}
+
+void do_reload_1c(int channel) {
+  leveldb::Iterator* iter;
+  int index = 0;
+  int i = 0;
+  int key_size = 0;
+  int value_size = 0;
+  int start = 0;
+  iter = g_list[channel];
+  while (iter->Valid() && index<INPUT_BUFFER_SIZE) {
+    key_size = iter->key().size();
+    value_size = iter->value().size();
+    my_arg.key_sizes[channel][index] = key_size;
+    my_arg.value_sizes[channel][index] = value_size;
+    start = index * 32;
+    for (i=0;i<32 && i< key_size;i++)
+      my_arg.key_data[channel][start+i] = iter->key().data()[i];
+    start = index * 100;
+    for (i=0;i<100 && i<value_size;i++)
+      my_arg.value_data[channel][start+i] = iter->value().data()[i];
+
+    index++;
+    iter->Next();
+  }
+  my_arg.data_count[channel] = index;
+}
 void do_flush_eextrac(int key_size, int value_size, 
     char key[],char value[]) {
   leveldb::Slice key_slice(key,key_size);
@@ -1029,9 +1082,10 @@ namespace leveldb {
 
     g_compact = compact;
     myInstance = this; 
-    int myresult = ecall_foo1(n_ways,0,0);
-   // compact_count++;
-    //printf("compact_count=%d\n",compact_count);
+    int myresult = ecall_foo1(n_ways,(long)(&my_arg),0);
+  //  int myresult = ecall_foo1(n_ways,0,0);
+    // compact_count++;
+    printf("compact_count\n");
     return Status::OK();
   }
 #if 0

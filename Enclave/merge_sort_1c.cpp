@@ -111,9 +111,6 @@ void onec_EnclCompact(int file_count, long user_arg)
   int count = file_count;
   cookie = (struct enclave_g_arg_t *)user_arg; 
   
-  bar1("in enclcompact and %d\n",cookie->in_index[0]);
-
-  bar1("in enclcompact and file_count=%d\n",count);
   int next;
   for (int i=0;i<file_count;i++)
     onec_readKV(i);
@@ -125,7 +122,6 @@ void onec_EnclCompact(int file_count, long user_arg)
       count--;
     }
   }
-  bar1("the last flush in enclave\n");
   ocall_1c_flush();
   cookie->out_index=0;
 
