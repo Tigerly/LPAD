@@ -112,9 +112,9 @@ LEVELDB_INT_FILES := App/integration/builder.cpp \
                      App/integration/db_bench.cpp  \
                      App/integration/testutil.cpp 
 #ifeq ($(LDB_INT), 1)
-# 	App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_FILES) $(LEVELDB_ZC_FILES)
+ 	App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_FILES) $(LEVELDB_ZC_FILES)
 #else
- 	App_Cpp_Files := App/App_Int.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_INT_FILES)
+# 	App_Cpp_Files := App/App_Int.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_INT_FILES)
 #endif
 
 App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include
@@ -172,8 +172,8 @@ Enclave_zc_Files := Enclave/zerocpy/ecall_entry.cpp \
                          Enclave/zerocpy/crc32c.cpp \
                          Enclave/zerocpy/sha3.cpp
 
-#Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_zc_Files)
-Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp 
+Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_zc_Files)
+#Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp 
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)
