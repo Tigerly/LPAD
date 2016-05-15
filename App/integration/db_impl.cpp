@@ -34,8 +34,12 @@
 #include "mutexlock.h"
 #define INPUT_BUFFER_SIZE 1024
 #define OUTPUT_BUFFER_SIZE 1024
+#define DIGEST_SIZE 20
 int ecall_foo1(int file_count, long arg1, long arg2);
+int ecall_notify1(long chain_address);
+void ecall_writer1(long chain_address, char key[32], char value[100], int key_size, int value_size, uint64_t seqno);
 leveldb::Iterator** g_list;
+void ecall_verify1(long hash_chain, char key[32],int key_size,uint64_t seqno, int isMem);
 leveldb::DBImpl* myInstance;
 std::string g_current_user_key;
 bool g_has_current_user_key = false;
@@ -55,6 +59,18 @@ struct g_arg_t {
   int out_value_sizes[OUTPUT_BUFFER_SIZE];
   int out_index=0;
 };
+
+struct hash_chain {
+  unsigned char raw_data[DIGEST_SIZE*60000];
+  int start = 0;
+  int tail = 0;
+  int imm_start = 0;
+  int imm_end = 0;
+  int reason = 0;
+  unsigned char prev[DIGEST_SIZE];
+  int prev_valid = 0;
+};
+struct hash_chain my_chain;
 
 struct g_arg_t my_arg;
 
@@ -587,6 +603,8 @@ namespace leveldb {
     stats.micros = env_->NowMicros() - start_micros;
     stats.bytes_written = meta.file_size;
     stats_[level].Add(stats);
+    my_chain.reason = 1;
+    ecall_notify1((long)&my_chain);
     return s;
   }
 
@@ -1085,10 +1103,11 @@ namespace leveldb {
     int myresult = ecall_foo1(n_ways,(long)(&my_arg),0);
   //  int myresult = ecall_foo1(n_ways,0,0);
     // compact_count++;
-    printf("compact_count\n");
+   // printf("compact_count\n");
     return Status::OK();
   }
-#if 0
+// original version
+#if 1
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1249,8 +1268,9 @@ namespace leveldb {
         "compacted to: %s", versions_->LevelSummary(&tmp));
     return status;
   }
-#endif 
-#if 1
+#endif
+// SU hack version 
+#if 0
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1403,11 +1423,16 @@ namespace leveldb {
       mutex_.Unlock();
       // First look in the memtable, then in the immutable memtable (if any).
       LookupKey lkey(key, snapshot);
-      if (mem->Get(lkey, value, &s)) {
+      uint64_t seq = 0;
+    //  if (mem->Get(lkey, value, &s)) {
+      if (mem->Get1(lkey, value, &s, &seq)) {
         // Done
+        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
       } else if (imm != NULL && imm->Get(lkey, value, &s)) {
+        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,0);
         // Done
       } else {
+        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,0);
         s = current->Get(options, lkey, value, &stats);
         have_stat_update = true;
       }
@@ -1454,20 +1479,18 @@ namespace leveldb {
 
   // Convenience methods
   Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
-
-    return DB::Put(o, key, val);
+    return  DB::Put(o,key,val); 
   }
 
   Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
     return DB::Delete(options, key);
   }
-
+  
   Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     Writer w(&mutex_);
     w.batch = my_batch;
     w.sync = options.sync;
     w.done = false;
-
     MutexLock l(&mutex_);
     writers_.push_back(&w);
     while (!w.done && &w != writers_.front()) {
@@ -1532,6 +1555,12 @@ namespace leveldb {
       writers_.front()->cv.Signal();
     }
 
+    /* SU hack start */
+    uint64_t seqno = versions_->LastSequence();
+    char key[32];
+    char value[100];
+    ecall_writer1((long)&my_chain, key,value,32,100,seqno);
+    /* SU hack end */
     return status;
   }
 
@@ -1639,6 +1668,8 @@ namespace leveldb {
         logfile_number_ = new_log_number;
         log_ = new log::Writer(lfile);
         imm_ = mem_;
+        my_chain.reason = 0;
+        ecall_notify1((long)&my_chain);
         has_imm_.Release_Store(imm_);
         mem_ = new MemTable(internal_comparator_);
         mem_->Ref();
@@ -1734,7 +1765,7 @@ namespace leveldb {
   Status DB::Put(const WriteOptions& opt, const Slice& key, const Slice& value) {
     WriteBatch batch;
     batch.Put(key, value);
-    return Write(opt, &batch);
+    return  Write(opt, &batch);
   }
 
   Status DB::Delete(const WriteOptions& opt, const Slice& key) {

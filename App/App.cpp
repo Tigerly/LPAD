@@ -36,6 +36,7 @@ int do_append(char space[100],size_t size);
 int do_append_nospace(int block_type,size_t size);
 
 
+
 int ecall_foo1(int file_count, long arg1, long arg2)
 {
   sgx_status_t ret = SGX_ERROR_UNEXPECTED;

@@ -33,8 +33,8 @@ extern void zc_entry(int file_count,long user_arg1, long user_arg2);
 int ecall_foo(int i, long arg1, long arg2)
 {
 //  EnclCompact(i);
-  eextrac_EnclCompact(i);
-//  onec_EnclCompact(i,arg1);
+//  eextrac_EnclCompact(i);
+  onec_EnclCompact(i,arg1);
 //  zc_entry(i,arg1,arg2);
   return 3;
 }
@@ -46,4 +46,23 @@ void ecall_sgx_cpuid(int cpuinfo[4], int leaf)
   sgx_status_t ret = sgx_cpuid(cpuinfo, leaf);
   if (ret != SGX_SUCCESS)
     abort();
+}
+
+void enclave_writer(long chain, char key[32], char value[100], int key_size, int value_size, uint64_t seqno);
+void enclave_notify(long chain);
+void enclave_verify_file(int merkle_height);
+void enclave_verify(long chain, char key[32], int key_size, uint64_t seqno, int isMem);
+void ecall_writer(long chain, char key[32], char value[100], int key_size, int value_size, uint64_t seqno) {
+ // enclave_writer(chain, key, value,key_size, value_size, seqno);
+}
+
+void ecall_verify(long chain, char key[32], int key_size, uint64_t seqno, int isMem) {
+//  enclave_verify(chain,key,key_size,seqno,isMem);
+}
+void ecall_notify(long chain) {
+//  enclave_notify(chain);
+}
+
+void ecall_verify_file(int merkle_height) {
+//  enclave_verify_file(merkle_height);
 }

@@ -396,7 +396,7 @@ Status Version::Get(const ReadOptions& options,
       saver.ucmp = ucmp;
       saver.user_key = user_key;
       saver.value = value;
-      s = vset_->table_cache_->Get(options, f->number, f->file_size,
+      s = vset_->table_cache_->Get1(options,files_[level].size(), f->number, f->file_size,
                                    ikey, &saver, SaveValue);
       if (!s.ok()) {
         return s;
