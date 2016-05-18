@@ -110,9 +110,6 @@ namespace leveldb {
       const Slice& k,
       void* arg,
       void (*saver)(void*, const Slice&, const Slice&)) {
-    int merkle_height = 0;
-    uint64_t tmp = file_size; 
-    while (tmp >>= 1) { ++merkle_height; }
     Cache::Handle* handle = NULL;
     Status s = FindTable(file_number, file_size, &handle);
     if (s.ok()) {

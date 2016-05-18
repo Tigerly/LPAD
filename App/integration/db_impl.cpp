@@ -1434,7 +1434,7 @@ namespace leveldb {
 #if VERIFY
         ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
 #endif
-    //  } else if (imm != NULL && imm->Get(lkey, value, &s)) {
+   //   } else if (imm != NULL && imm->Get(lkey, value, &s)) {
       } else if (imm != NULL && imm->Get1(lkey, value, &s, &seq)) {
 #if VERIFY
         ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
@@ -1543,19 +1543,23 @@ namespace leveldb {
           // So we force the DB into a mode where all future writes fail.
           RecordBackgroundError(status);
         }
+      }
+      if (updates == tmp_batch_) tmp_batch_->Clear();
+
+      versions_->SetLastSequence(last_sequence);
 #if VERIFY
         /* SU hack start */
         uint64_t seqno = versions_->LastSequence();
         Slice key;
         Slice value;
         updates->Iterate1(&key,&value);
+       //   char key[16];
+       //   char value[100];
         ecall_writer1((long)&my_chain, (char *)key.data(),(char *)value.data(),16,100,seqno);
+      //  ecall_writer1((long)&my_chain, key,value,16,100,seqno);
         /* SU hack end */
 #endif
-      }
-      if (updates == tmp_batch_) tmp_batch_->Clear();
 
-      versions_->SetLastSequence(last_sequence);
     }
 
     while (true) {
@@ -1684,23 +1688,11 @@ namespace leveldb {
 #if VERIFY
         Iterator* imm_iter = imm_->NewIterator();
         imm_iter->SeekToFirst();
-        uint64_t tag;
-        uint64_t min;
-        uint64_t max;
-     //   Slice key = imm_iter->key();
-    //    memcpy(&tag,key.data()+16,8);
-    //    tag=tag>>8;
-    //    printf("tag=%lu\n",tag);
-   //     max=min=tag;
         int i=0;
         while (imm_iter->Valid()) {
             Slice key = imm_iter->key();
             memcpy(my_chain.imm_data+i,key.data(),24);
             i+=24;
-     //       memcpy(&tag,key.data()+16,8);
-      //      tag=tag>>8;
-     //       if (tag<min) min=tag;
-     //       if (tag>max) max=tag;
             imm_iter->Next();
         }
         ecall_notify1((long)&my_chain);
