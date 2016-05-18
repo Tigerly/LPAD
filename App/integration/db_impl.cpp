@@ -35,11 +35,12 @@
 #define INPUT_BUFFER_SIZE 1024
 #define OUTPUT_BUFFER_SIZE 1024
 #define DIGEST_SIZE 20
+#define VERIFY 1
 int ecall_foo1(int file_count, long arg1, long arg2);
 int ecall_notify1(long chain_address);
-void ecall_writer1(long chain_address, char key[32], char value[100], int key_size, int value_size, uint64_t seqno);
+void ecall_writer1(long chain_address, char key[16], char value[100], int key_size, int value_size, uint64_t seqno);
 leveldb::Iterator** g_list;
-void ecall_verify1(long hash_chain, char key[32],int key_size,uint64_t seqno, int isMem);
+void ecall_verify1(long hash_chain, char key[16],int key_size,uint64_t seqno, int isMem);
 leveldb::DBImpl* myInstance;
 std::string g_current_user_key;
 bool g_has_current_user_key = false;
@@ -62,6 +63,7 @@ struct g_arg_t {
 
 struct hash_chain {
   unsigned char raw_data[DIGEST_SIZE*60000];
+  unsigned char imm_data[24*30000];
   int start = 0;
   int tail = 0;
   int imm_start = 0;
@@ -604,7 +606,9 @@ namespace leveldb {
     stats.bytes_written = meta.file_size;
     stats_[level].Add(stats);
     my_chain.reason = 1;
+#if VERIFY
     ecall_notify1((long)&my_chain);
+#endif
     return s;
   }
 
@@ -1427,12 +1431,19 @@ namespace leveldb {
     //  if (mem->Get(lkey, value, &s)) {
       if (mem->Get1(lkey, value, &s, &seq)) {
         // Done
+#if VERIFY
         ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
-      } else if (imm != NULL && imm->Get(lkey, value, &s)) {
-        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,0);
+#endif
+    //  } else if (imm != NULL && imm->Get(lkey, value, &s)) {
+      } else if (imm != NULL && imm->Get1(lkey, value, &s, &seq)) {
+#if VERIFY
+        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
+#endif
         // Done
       } else {
-        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,0);
+#if VERIFY
+        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,3);
+#endif
         s = current->Get(options, lkey, value, &stats);
         have_stat_update = true;
       }
@@ -1508,7 +1519,6 @@ namespace leveldb {
       WriteBatch* updates = BuildBatchGroup(&last_writer);
       WriteBatchInternal::SetSequence(updates, last_sequence + 1);
       last_sequence += WriteBatchInternal::Count(updates);
-
       // Add to log and apply to memtable.  We can release the lock
       // during this phase since &w is currently responsible for logging
       // and protects against concurrent loggers and concurrent writes
@@ -1533,6 +1543,15 @@ namespace leveldb {
           // So we force the DB into a mode where all future writes fail.
           RecordBackgroundError(status);
         }
+#if VERIFY
+        /* SU hack start */
+        uint64_t seqno = versions_->LastSequence();
+        Slice key;
+        Slice value;
+        updates->Iterate1(&key,&value);
+        ecall_writer1((long)&my_chain, (char *)key.data(),(char *)value.data(),16,100,seqno);
+        /* SU hack end */
+#endif
       }
       if (updates == tmp_batch_) tmp_batch_->Clear();
 
@@ -1554,13 +1573,6 @@ namespace leveldb {
     if (!writers_.empty()) {
       writers_.front()->cv.Signal();
     }
-
-    /* SU hack start */
-    uint64_t seqno = versions_->LastSequence();
-    char key[32];
-    char value[100];
-    ecall_writer1((long)&my_chain, key,value,32,100,seqno);
-    /* SU hack end */
     return status;
   }
 
@@ -1669,7 +1681,30 @@ namespace leveldb {
         log_ = new log::Writer(lfile);
         imm_ = mem_;
         my_chain.reason = 0;
+#if VERIFY
+        Iterator* imm_iter = imm_->NewIterator();
+        imm_iter->SeekToFirst();
+        uint64_t tag;
+        uint64_t min;
+        uint64_t max;
+     //   Slice key = imm_iter->key();
+    //    memcpy(&tag,key.data()+16,8);
+    //    tag=tag>>8;
+    //    printf("tag=%lu\n",tag);
+   //     max=min=tag;
+        int i=0;
+        while (imm_iter->Valid()) {
+            Slice key = imm_iter->key();
+            memcpy(my_chain.imm_data+i,key.data(),24);
+            i+=24;
+     //       memcpy(&tag,key.data()+16,8);
+      //      tag=tag>>8;
+     //       if (tag<min) min=tag;
+     //       if (tag>max) max=tag;
+            imm_iter->Next();
+        }
         ecall_notify1((long)&my_chain);
+#endif
         has_imm_.Release_Store(imm_);
         mem_ = new MemTable(internal_comparator_);
         mem_->Ref();

@@ -79,6 +79,36 @@ Status WriteBatch::Iterate(Handler* handler) const {
   }
 }
 
+Status WriteBatch::Iterate1(Slice *key, Slice *value) const {
+  Slice input(rep_);
+  if (input.size() < kHeader) {
+    return Status::Corruption("malformed WriteBatch (too small)");
+  }
+
+  input.remove_prefix(kHeader);
+  int found = 0;
+  while (!input.empty()) {
+    found++;
+    char tag = input[0];
+    input.remove_prefix(1);
+    switch (tag) {
+      case kTypeValue:
+        if (GetLengthPrefixedSlice(&input, key) &&
+            GetLengthPrefixedSlice(&input, value)) {
+        } else {
+          return Status::Corruption("bad WriteBatch Put");
+        }
+        break;
+      default:
+        return Status::Corruption("unknown WriteBatch tag");
+    }
+  }
+  if (found != WriteBatchInternal::Count(this)) {
+    return Status::Corruption("WriteBatch has wrong count");
+  } else {
+    return Status::OK();
+  }
+}
 int WriteBatchInternal::Count(const WriteBatch* b) {
   return DecodeFixed32(b->rep_.data() + 8);
 }

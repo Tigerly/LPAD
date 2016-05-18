@@ -36,6 +36,8 @@
 #include "coding.h"
 #define CHAR_BUFFER 1
 
+uint32_t g_mem[3000000];
+
 BlockBuilder::BlockBuilder(const Options* options, int i, char* buf)
     : options_(options),
       restarts_(),
@@ -47,7 +49,8 @@ BlockBuilder::BlockBuilder(const Options* options, int i, char* buf)
   assert(options->block_restart_interval >= 1);
   restarts_.push_back(0);       // First restart point is at offset 0
   if (block_type==1) {
-      restarts_index = (uint32_t *)malloc(100000*sizeof(uint32_t));
+      restarts_index = g_mem;
+   //  restarts_index = (uint32_t *)malloc(1000000*sizeof(uint32_t));
       restarts_pointer = 1;
       restarts_index[0] = 0;
   }

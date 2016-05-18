@@ -18,11 +18,11 @@ enclave {
          * Utilize SGX version __cpuid() in enclave.
          */
         public void ecall_sgx_cpuid([in, out] int cpuinfo[4], int leaf);
-//        public void ecall_notify(long chain_address);
-//        public void ecall_writer(long chain_address, [in] char key[32], [in] char value[100], 
-//                            int key_size, int value_size, uint64_t seqno);
- //       public void ecall_verify(long chain_address, [in] char key[32], 
-   //           int key_size, uint64_t seqno, int isMem);
- //       public void ecall_verify_file(int merkle_height);
+        public void ecall_notify(long chain_address);
+        public void ecall_writer(long chain_address, [in] char key[16], [in] char value[100], 
+                            int key_size, int value_size, uint64_t seqno);
+        public void ecall_verify(long chain_address, [in] char key[16], 
+              int key_size, uint64_t seqno, int isMem);
+        public void ecall_verify_file(int merkle_height);
     };
 };

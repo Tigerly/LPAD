@@ -50,6 +50,7 @@ class WriteBatch {
     virtual void Delete(const Slice& key) = 0;
   };
   Status Iterate(Handler* handler) const;
+  Status Iterate1(Slice *key, Slice *value) const;
 
  private:
   friend class WriteBatchInternal;

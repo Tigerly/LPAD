@@ -14,7 +14,7 @@
 
 #define INPUT_BUFFER_SIZE 1024
 #define OUTPUT_BUFFER_SIZE 1024
-#define NONCPY 0
+#define NONCPY 1
 int su_prepare(int argc, char* argv[], int *r, long* user_arg);
 void su_cleanup();
 int su_prepare_zc(int argc, char* argv[], int *r, long* user_arg1, long *user_arg2);

@@ -7,10 +7,11 @@ struct hashchain_node {
 uint64_t last_seq = 0;
 
 #define DIGEST_SIZE 20
-#define MESSAGE_SIZE 32
+#define KEY_SIZE 16
 #define SEQ_SIZE 8
 struct hash_chain {
   unsigned char raw_data[DIGEST_SIZE*60000];
+  unsigned char imm_data[24*30000];
   int start;
   int tail;
   int imm_start;
@@ -19,14 +20,15 @@ struct hash_chain {
   unsigned char prev[DIGEST_SIZE];
   int prev_valid;
 };
+unsigned char reordered_imm_data[24*30000];
 
-unsigned char buf[DIGEST_SIZE+MESSAGE_SIZE+SEQ_SIZE];
+unsigned char buf[DIGEST_SIZE+KEY_SIZE+SEQ_SIZE];
 unsigned char ret[DIGEST_SIZE];
 
 uint64_t start_seq = 0;
 uint64_t imm_start_seq = 0;
 /* temporary*/
-char dummy_key[32];
+char dummy_key[16];
 unsigned char dummy_prev_digest[20];
 uint64_t dummy_seq=0;
 
@@ -35,9 +37,9 @@ void sha3_final(unsigned char *hash, unsigned int size);
 void static add_chain(long chain_address, const char* message, int message_len, uint64_t seqno) {
   struct hash_chain* my_chain = (struct hash_chain *)chain_address;
   if ((!my_chain->prev_valid) && (my_chain->start == my_chain->tail)) {
-    memcpy(buf,message,MESSAGE_SIZE);
-    memcpy(buf+MESSAGE_SIZE,&seqno,SEQ_SIZE);
-    sha3_update((unsigned const char*)buf,MESSAGE_SIZE+SEQ_SIZE);
+    memcpy(buf,message,KEY_SIZE);
+    memcpy(buf+KEY_SIZE,&seqno,SEQ_SIZE);
+    sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
     sha3_final(ret,DIGEST_SIZE);
     memcpy(&my_chain->raw_data[my_chain->tail*DIGEST_SIZE],ret,DIGEST_SIZE);
     start_seq = seqno;
@@ -50,16 +52,15 @@ void static add_chain(long chain_address, const char* message, int message_len, 
     }
     else 
       memcpy(buf,&my_chain->raw_data[(my_chain->tail-1)*20],20);
-    memcpy(buf+20,message,32);
-    memcpy(buf+52,&seqno,8);
+    memcpy(buf+DIGEST_SIZE,message,16);
+    memcpy(buf+DIGEST_SIZE+KEY_SIZE,&seqno,8);
     sha3_update((unsigned const char*)buf,40);
     sha3_final(ret,20);
     memcpy(&my_chain->raw_data[my_chain->tail*20],ret,20);
   }
   my_chain->tail++;
 }
-void enclave_writer(long chain_address, char key[32], char value[100], int key_size, int value_size, uint64_t seqno) {
-
+void enclave_writer(long chain_address, char key[16], char value[100], int key_size, int value_size, uint64_t seqno) {
   if (seqno == last_seq + 1) {
     last_seq = seqno;
     add_chain(chain_address, key,key_size,seqno);
@@ -74,7 +75,7 @@ void enclave_notify(long chain_address) {
 //    bar1("before flush imm_start=%d imm_end=%d\n",my_chain->imm_start,my_chain->imm_end);
     my_chain->imm_start = 0;
     my_chain->imm_end = 0;
-//    bar1("after flush imm_start=0 imm_end=0\n");
+    bar1("after flush imm_start=0 imm_end=0\n");
   }
   else {
 //    bar1("before flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid);
@@ -85,7 +86,7 @@ void enclave_notify(long chain_address) {
     my_chain->start = 30000-my_chain->start;
     my_chain->tail = my_chain->start;
     imm_start_seq = start_seq;
-//    bar1("after flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid);
+    bar1("after flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d, imm_start_seq=%lu\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid,imm_start_seq);
   } 
 }
 
@@ -96,9 +97,9 @@ int timeTraverse(long chain, int start, int end){
   struct hash_chain *my_chain = (struct hash_chain *)chain;
   for (int i=start;i<end;i++) {
       memcpy(buf,dummy_prev_digest,20);
-      memcpy(buf,dummy_key,32);
+      memcpy(buf,dummy_key,16);
       memcpy(buf,&dummy_seq,8);
-      sha3_update((unsigned const char*)buf,MESSAGE_SIZE+SEQ_SIZE);
+      sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
       sha3_final(ret,DIGEST_SIZE);
       status = memcmp(ret,&my_chain->raw_data[start*20],20);
       // if (status!=0) return;
@@ -106,17 +107,23 @@ int timeTraverse(long chain, int start, int end){
   return 1;
 }
 
-void enclave_verify(long chain, char key[32], int key_size, uint64_t seqno, int isMem) {
+void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int isMem) {
   struct hash_chain *my_chain = (struct hash_chain *)chain;
   int verify_start = 0;
   int isCorrect = 0;
-  if (isMem) {
+  if (isMem == 1) {
  //   bar1("found in mem, start_seq=%lu, target_seq=%lu, start=%d,tail=%d\n",start_seq,seqno,my_chain->start,my_chain->tail);
     verify_start = my_chain->start+seqno-start_seq;
     isCorrect = timeTraverse(chain,verify_start,my_chain->tail-1);
     if (isCorrect == 0){} // abort();      
   } else {
-    isCorrect = timeTraverse(chain,verify_start,my_chain->imm_end);
+    if (isMem==2) {
+//        bar1("verifiy parital imm seqno=%lu imm_start_seq=%lu\n",seqno,imm_start_seq);
+    } else {
+//        bar1("verify entire imm\n");
+    }
+  //  bar1("found in imm, seq=%lu, imm_start_seq=%lu\n",seqno,imm_start_seq);
+    isCorrect = timeTraverse(chain,my_chain->imm_start,my_chain->imm_end);
     if (isCorrect == 0){} //abort();
     isCorrect = timeTraverse(chain,my_chain->start,my_chain->tail-1);
     if (isCorrect == 0){} //abort();
@@ -127,7 +134,7 @@ void enclave_verify(long chain, char key[32], int key_size, uint64_t seqno, int 
 void enclave_verify_file(int merkle_height) {
 //  bar1("verify files height=%d\n",merkle_height);
   for (int i=0;i<merkle_height;i++) {
-    sha3_update((unsigned const char*)buf,MESSAGE_SIZE+SEQ_SIZE);
+    sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
     sha3_final(ret,DIGEST_SIZE);
   }
 }

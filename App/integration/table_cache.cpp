@@ -9,6 +9,7 @@
 #include "table.h"
 #include "coding.h"
 
+#define VERIFY 0
 void ecall_verify_file1(int merkle_height);
 namespace leveldb {
 
@@ -129,18 +130,22 @@ namespace leveldb {
       void* arg,
       void (*saver)(void*, const Slice&, const Slice&)) {
     int merkle_height = 0;
+#if VERIFY
     uint64_t tmp = file_size; 
     while (tmp >>= 1) { ++merkle_height; }
     merkle_height++;
     while (num_of_files >>= 1) { ++merkle_height; }
     merkle_height++;
+#endif
     Cache::Handle* handle = NULL;
     Status s = FindTable(file_number, file_size, &handle);
     if (s.ok()) {
       Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
       s = t->InternalGet(options, k, arg, saver);
       cache_->Release(handle);
+#if VERIFY
       ecall_verify_file1(merkle_height);
+#endif
     }
     return s;
   }

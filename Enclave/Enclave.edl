@@ -21,7 +21,7 @@ enclave {
    */
   untrusted {
     void ocall_bar([in, string] const  char *str);
-
+/*
     void ocall_reload([out] int key_sizes[1024],
         [out] int value_sizes[1024],
         [out] char key[32768],
@@ -47,7 +47,7 @@ enclave {
     int ocall_file_flush();
     int ocall_append([in] char space[100], size_t size);
     int ocall_append_nospace(int block_type, size_t size);
-
+*/
     void ocall_1c_reload(
         int fileIdx);   
     void ocall_1c_flush();
