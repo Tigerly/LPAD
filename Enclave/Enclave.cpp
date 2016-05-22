@@ -33,8 +33,8 @@ extern void zc_entry(int file_count,long user_arg1, long user_arg2);
 int ecall_foo(int i, long arg1, long arg2)
 {
 //  EnclCompact(i);
-  eextrac_EnclCompact(i);
-//  onec_EnclCompact(i,arg1);
+//  eextrac_EnclCompact(i);
+  onec_EnclCompact(i,arg1);
 //  zc_entry(i,arg1,arg2);
   return 3;
 }
@@ -47,6 +47,7 @@ void ecall_sgx_cpuid(int cpuinfo[4], int leaf)
   if (ret != SGX_SUCCESS)
     abort();
 }
+
 
 void enclave_writer(long chain, char key[16], char value[100], int key_size, int value_size, uint64_t seqno);
 void enclave_notify(long chain);
@@ -66,3 +67,4 @@ void ecall_notify(long chain) {
 void ecall_verify_file(int merkle_height) {
   enclave_verify_file(merkle_height);
 }
+

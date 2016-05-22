@@ -36,7 +36,8 @@
 #include "coding.h"
 #define CHAR_BUFFER 1
 
-uint32_t g_mem[3000000];
+static uint32_t g_mem[30000000];
+//static uint32_t g_mem[1000000];
 
 BlockBuilder::BlockBuilder(const Options* options, int i, char* buf)
     : options_(options),
@@ -95,7 +96,7 @@ size_t BlockBuilder::CurrentSizeEstimate() const {
 
 Slice BlockBuilder::Finish() {
   if (block_type == 1) {
-    bar1("restarts_size=%u\n",restarts_pointer);
+ //   bar1("restarts_size=%u\n",restarts_pointer);
     for (size_t i = 0; i < restarts_pointer; i++) {
       PutFixed32_SU(b_SU+buffer_pointer,restarts_index[i]);
       buffer_pointer+=4;

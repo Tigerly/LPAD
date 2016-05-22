@@ -12,29 +12,44 @@
 #include "App.h"
 #include "Enclave_u.h"
 
+#define INPUT_BUFFER_SIZE 1024
+#define OUTPUT_BUFFER_SIZE 1024
 #define NONCPY 1
-int su_prepare(int argc, char* argv[], int *r, long* user_arg);
-void su_cleanup();
-int su_prepare_zc(int argc, char* argv[], int *r, long* user_arg1, long *user_arg2);
-void su_cleanup_zc();
-void do_reload(int key_sizes[],int value_sizes[],
-    char key[], char value[], int length[], int channel);
-void do_flush(int key_sizes[], int value_sizes[], 
-    char key[],char value[], int length);
-void do_reload_eextrac(int key_size[],int value_size[],
-    char key[], char value[], int valid[], int fileIdx);
-void do_flush_eextrac(int key_size, int value_size, 
-    char key[],char value[]);
+int db_bench_entry(int argc, char* argv[]);
+/*
+   int su_prepare(int argc, char* argv[], int *r, long* user_arg);
+   void su_cleanup();
+   int su_prepare_zc(int argc, char* argv[], int *r, long* user_arg1, long *user_arg2);
+   void su_cleanup_zc();
+   void do_reload(int key_sizes[],int value_sizes[],
+   char key[], char value[], int length[], int channel);
+   void do_flush(int key_sizes[], int value_sizes[], 
+   char key[],char value[], int length);
+   int do_read(uint64_t offset, size_t size, int length[1], int fileIdx, char space[100]);
+   int do_read_nospace(uint64_t offset, size_t size, int length[1], int fileIdx, int isIndex);
+   int do_file_flush();
+   int do_append(char space[100],size_t size);
+   int do_append_nospace(int block_type,size_t size);
+ */
 void do_reload_1c(int fileIdx);
 void do_flush_1c();
-int do_read(uint64_t offset, size_t size, int length[1], int fileIdx, char space[100]);
-int do_read_nospace(uint64_t offset, size_t size, int length[1], int fileIdx, int isIndex);
-int do_file_flush();
-int do_append(char space[100],size_t size);
-int do_append_nospace(int block_type,size_t size);
+void do_flush_eextrac(int key_size, int value_size, 
+    char key[],char value[]);
+void do_reload_eextrac(int key_size[],int value_size[],
+    char key[], char value[], int valid[], int fileIdx);
 
-
-
+void ecall_writer1(long hash_chain, char key[32], char value[100], int key_size, int value_size, uint64_t seqno) {
+  ecall_writer(global_eid,hash_chain,key,value,key_size,value_size,seqno);
+}
+void ecall_verify1(long hash_chain, char key[32],int key_size,uint64_t seqno, int isMem) {
+  ecall_verify(global_eid,hash_chain,key,key_size,seqno,isMem);
+}
+void ecall_verify_file1(int merkle_height) {
+  ecall_verify_file(global_eid,merkle_height);
+}
+void ecall_notify1(long hash_chain) {
+  ecall_notify(global_eid,hash_chain);
+}
 int ecall_foo1(int file_count, long arg1, long arg2)
 {
   sgx_status_t ret = SGX_ERROR_UNEXPECTED;
@@ -236,17 +251,6 @@ void ocall_bar(const char *str)
    */
   printf("%s", str);
 }
-
-void ocall_flush(int key_sizes[],int value_sizes[], 
-    char key[], char value[],int length){
-  do_flush(key_sizes, value_sizes, key,value,length); 
-}
-
-void ocall_reload(int key_sizes[],int value_sizes[],
-    char key[], char value[], int length[], int way){
-  do_reload(key_sizes,value_sizes,key,value,length,way);
-}
-
 /* extra-extra-copy*/
 void ocall_eextrac_flush(int key_size,int value_size, 
     char key[], char value[]){
@@ -265,6 +269,16 @@ void ocall_1c_flush(){
 
 void ocall_1c_reload(int fileIdx){
   do_reload_1c(fileIdx);
+}
+#if 0
+void ocall_flush(int key_sizes[],int value_sizes[], 
+    char key[], char value[],int length){
+  do_flush(key_sizes, value_sizes, key,value,length); 
+}
+
+void ocall_reload(int key_sizes[],int value_sizes[],
+    char key[], char value[], int length[], int way){
+  do_reload(key_sizes,value_sizes,key,value,length,way);
 }
 
 /* no copy*/
@@ -287,6 +301,7 @@ int ocall_append(char space[100], size_t size) {
 int ocall_append_nospace(int block_type, size_t size) {
   return do_append_nospace(block_type,size);
 }
+#endif
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -303,23 +318,24 @@ int SGX_CDECL main(int argc, char *argv[])
 #if NONCPY
   long my_arg1,my_arg2;
   struct timeval start,end;
-  su_prepare_zc(argc, argv, &file_count,&my_arg1,&my_arg2);
+  //  su_prepare_zc(argc, argv, &file_count,&my_arg1,&my_arg2);
   gettimeofday(&start,NULL);
-  retval=ecall_foo1(file_count,my_arg1,my_arg2);
-  su_cleanup_zc();
+  db_bench_entry(argc,argv);
+  //  retval=ecall_foo1(file_count,my_arg1,my_arg2);
+  //  su_cleanup_zc();
   gettimeofday(&end,NULL);
   printf("%ld\n", ((end.tv_sec * 1000000 + end.tv_usec)
-      - (start.tv_sec * 1000000 + start.tv_usec)));
+        - (start.tv_sec * 1000000 + start.tv_usec)));
 #else
   long my_arg;
   struct timeval start,end;
-  su_prepare(argc, argv, &file_count,&my_arg);
+  //  su_prepare(argc, argv, &file_count,&my_arg);
   gettimeofday(&start,NULL);
-  retval=ecall_foo1(file_count, my_arg,0);
-  su_cleanup();
+  //  retval=ecall_foo1(file_count, my_arg,0);
+  //  su_cleanup();
   gettimeofday(&end,NULL);
   printf("%ld\n", ((end.tv_sec * 1000000 + end.tv_usec)
-      - (start.tv_sec * 1000000 + start.tv_usec)));
+        - (start.tv_sec * 1000000 + start.tv_usec)));
 #endif
   printf("retval: %d\n", retval);
 

@@ -48,22 +48,22 @@ static const char* FLAGS_benchmarks =
     "overwrite,"
     "readrandom,"
     "readrandom,"  // Extra run to allow previous compactions to quiesce
-    "readseq,"
-    "readreverse,"
+ //   "readseq,"
+  //  "readreverse,"
     "compact,"
     "readrandom,"
-    "readseq,"
-    "readreverse,"
+//    "readseq,"
+//    "readreverse,"
  //   "fill100K,"
-    "crc32c,"
-    "snappycomp,"
-    "snappyuncomp,"
-    "acquireload,"
+//    "crc32c,"
+//    "snappycomp,"
+//    "snappyuncomp,"
+ //   "acquireload,"
     ;
 
 // Number of key/values to place in database
-//static int FLAGS_num = 1000000;
-static int FLAGS_num = 20000;
+static int FLAGS_num = 1000000;
+//static int FLAGS_num = 28250;
 
 // Number of read operations to do.  If negative, do FLAGS_num reads.
 static int FLAGS_reads = -1;

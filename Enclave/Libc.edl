@@ -23,6 +23,6 @@ enclave {
                             int key_size, int value_size, uint64_t seqno);
         public void ecall_verify(long chain_address, [in] char key[16], 
               int key_size, uint64_t seqno, int isMem);
-        public void ecall_verify_file(int merkle_height);
+       public void ecall_verify_file(int merkle_height);
     };
 };

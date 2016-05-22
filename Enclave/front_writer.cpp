@@ -122,7 +122,7 @@ void enclave_notify(long chain_address) {
     //    bar1("before flush imm_start=%d imm_end=%d\n",my_chain->imm_start,my_chain->imm_end);
     my_chain->imm_start = 0;
     my_chain->imm_end = 0;
-    bar1("after flush imm_start=0 imm_end=0\n");
+    //bar1("after flush imm_start=0 imm_end=0\n");
   }
   else {
     //    bar1("before flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid);
@@ -134,7 +134,8 @@ void enclave_notify(long chain_address) {
     my_chain->tail = my_chain->start;
     imm_start_seq = start_seq;
     /* reorder immutable memtable to time-ordered*/
-    uint64_t tag;
+   
+   uint64_t tag;
     uint64_t min;
     uint64_t max;
     memcpy(&tag,my_chain->imm_data+16,8);
@@ -147,7 +148,8 @@ void enclave_notify(long chain_address) {
       if (tag<min) min=tag;
       if (tag>max) max=tag;
       j+=24;
-      pos = tag - imm_start_seq;
+    // pos = tag - imm_start_seq;
+      pos = 0;
       memcpy(reordered_imm_data+pos*24,my_chain->imm_data+j,24);
     }
     /* time traverse to verify*/
@@ -161,13 +163,12 @@ void enclave_notify(long chain_address) {
       build_merkle(out_tree,(const char *)my_chain->imm_data+k,24);
       k+=24;
     }
-    bar1("after flip max=%lu and min=%lu\n",max,min);
-    bar1("after flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d, imm_start_seq=%lu\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid,imm_start_seq);
+  //  bar1("after flip max=%lu and min=%lu\n",max,min);
+  //  bar1("after flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d, imm_start_seq=%lu\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid,imm_start_seq);
   } 
 }
 
 void enclave_verify_file(int merkle_height) {
-  //  bar1("verify files height=%d\n",merkle_height);
   for (int i=0;i<merkle_height;i++) {
     sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
     sha3_final(ret,DIGEST_SIZE);
@@ -180,26 +181,38 @@ void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int 
   int isCorrect = 0;
   if (isMem == 1) {
     //   bar1("found in mem, start_seq=%lu, target_seq=%lu, start=%d,tail=%d\n",start_seq,seqno,my_chain->start,my_chain->tail);
-    verify_start = my_chain->start+seqno-start_seq;
-    isCorrect = timeTraverse(chain,verify_start,my_chain->tail-1);
-    if (isCorrect == 0){} // abort();      
+    //  verify_start = my_chain->start+seqno-start_seq;
+    //  isCorrect = timeTraverse(chain,verify_start,my_chain->tail-1);
+    //  if (isCorrect == 0){} // abort();      
+    int tmp = my_chain->tail-my_chain->start;
+    int merkle_height=0;
+    while (tmp >>= 1) { ++merkle_height; }
+    merkle_height++;
+    enclave_verify_file(2*merkle_height);
+
   } else if (isMem==2) {
-   // bar1("verifiy partial imm seqno=%lu imm_start_seq=%lu\n",seqno,imm_start_seq);
-    isCorrect = timeTraverse(chain,my_chain->imm_start+seqno-imm_start_seq,my_chain->imm_end);
+    // bar1("verifiy partial imm seqno=%lu imm_start_seq=%lu\n",seqno,imm_start_seq);
+    //   isCorrect = timeTraverse(chain,my_chain->imm_start+seqno-imm_start_seq,my_chain->imm_end);
+    int tmp = my_chain->imm_end-my_chain->imm_start;
+    int merkle_height=0;
+    while (tmp >>= 1) { ++merkle_height; }
+    merkle_height++;
+    enclave_verify_file(2*merkle_height);
+
   } else {
     //        bar1("verify entire imm\n");
     /* method 1 - verify over merkle-tree*/
-//    int tmp = my_chain->imm_end-my_chain->imm_start;
-//    int merkle_height=0;
-//    while (tmp >>= 1) { ++merkle_height; }
-//    merkle_height++;
-//    enclave_verify_file(merkle_height);
+    int tmp = my_chain->imm_end-my_chain->imm_start;
+    int merkle_height=0;
+    while (tmp >>= 1) { ++merkle_height; }
+    merkle_height++;
+    enclave_verify_file(2*merkle_height);
 
     /* method 2 - hash chain verifying*/
-    isCorrect = timeTraverse(chain,my_chain->imm_start,my_chain->imm_end);
-    if (isCorrect == 0){} //abort();
-    isCorrect = timeTraverse(chain,my_chain->start,my_chain->tail-1);
-    if (isCorrect == 0){} //abort();
+    //  isCorrect = timeTraverse(chain,my_chain->imm_start,my_chain->imm_end);
+    //  if (isCorrect == 0){} //abort();
+    //  isCorrect = timeTraverse(chain,my_chain->start,my_chain->tail-1);
+    //  if (isCorrect == 0){} //abort();
   }
 }
 

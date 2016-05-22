@@ -167,7 +167,6 @@ int su_prepare(int argc, char* argv[], int *r, long *user_arg){
     g_list[i] = table_list[i]->NewIterator(options);
     g_list[i]->SeekToFirst();
   }
-
   options1.create_if_missing=1;
   /* build output file */
   std::string outname = "output.ldb";

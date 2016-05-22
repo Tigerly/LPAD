@@ -9,7 +9,7 @@
 #include "table.h"
 #include "coding.h"
 
-#define VERIFY 0
+#define VERIFY 1
 void ecall_verify_file1(int merkle_height);
 namespace leveldb {
 

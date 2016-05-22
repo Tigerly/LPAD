@@ -14,7 +14,7 @@
 
 struct out_mem {
   char data_block[1000000];
-  char index_block[10000000];
+  char index_block[1000000000];
   char meta_block[1000];
 };
 
@@ -171,9 +171,11 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
   r->last_key.assign(key.data(), key.size());
   r->num_entries++;
   r->data_block.Add(key, value);
+  static int count = 0;
 
   const size_t estimated_block_size = r->data_block.CurrentSizeEstimate();
   if (estimated_block_size >= r->options.block_size) {
+    count++;
     Flush();
   }
 }

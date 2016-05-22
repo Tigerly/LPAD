@@ -35,7 +35,7 @@
 #define INPUT_BUFFER_SIZE 1024
 #define OUTPUT_BUFFER_SIZE 1024
 #define DIGEST_SIZE 20
-#define VERIFY 1
+#define VERIFY 0
 int ecall_foo1(int file_count, long arg1, long arg2);
 int ecall_notify1(long chain_address);
 void ecall_writer1(long chain_address, char key[16], char value[100], int key_size, int value_size, uint64_t seqno);
@@ -616,6 +616,9 @@ namespace leveldb {
     mutex_.AssertHeld();
     assert(imm_ != NULL);
 
+    static int compact_mem_count1=0;
+    compact_mem_count1++;
+   // printf("compact mem count1 =%d\n",compact_mem_count1);
     // Save the contents of the memtable as a new Table
     VersionEdit edit;
     Version* base = versions_->current();
@@ -1111,7 +1114,7 @@ namespace leveldb {
     return Status::OK();
   }
 // original version
-#if 1
+#if 0
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1130,6 +1133,9 @@ namespace leveldb {
     } else {
       compact->smallest_snapshot = snapshots_.oldest()->number_;
     }
+    static int compact_count=0;
+    compact_count++;
+   // printf("compact count = %d\n",compact_count);
 
     // Release mutex while we're actually doing the compaction work
     mutex_.Unlock();
@@ -1274,7 +1280,7 @@ namespace leveldb {
   }
 #endif
 // SU hack version 
-#if 0
+#if 1
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1434,7 +1440,7 @@ namespace leveldb {
 #if VERIFY
         ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
 #endif
-   //   } else if (imm != NULL && imm->Get(lkey, value, &s)) {
+    //  } else if (imm != NULL && imm->Get(lkey, value, &s)) {
       } else if (imm != NULL && imm->Get1(lkey, value, &s, &seq)) {
 #if VERIFY
         ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
@@ -1553,10 +1559,7 @@ namespace leveldb {
         Slice key;
         Slice value;
         updates->Iterate1(&key,&value);
-       //   char key[16];
-       //   char value[100];
         ecall_writer1((long)&my_chain, (char *)key.data(),(char *)value.data(),16,100,seqno);
-      //  ecall_writer1((long)&my_chain, key,value,16,100,seqno);
         /* SU hack end */
 #endif
 
@@ -1686,6 +1689,7 @@ namespace leveldb {
         imm_ = mem_;
         my_chain.reason = 0;
 #if VERIFY
+
         Iterator* imm_iter = imm_->NewIterator();
         imm_iter->SeekToFirst();
         int i=0;
@@ -1695,6 +1699,7 @@ namespace leveldb {
             i+=24;
             imm_iter->Next();
         }
+
         ecall_notify1((long)&my_chain);
 #endif
         has_imm_.Release_Store(imm_);

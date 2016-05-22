@@ -20,7 +20,7 @@ struct mht_node {
   unsigned char digest[20];
 };
 
-#define MERKLE_TREE 1
+#define MERKLE_TREE 0
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
 void insert(struct mht_node** tree, const char* message, int message_len) {
