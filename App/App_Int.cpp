@@ -38,11 +38,14 @@ void do_flush_eextrac(int key_size, int value_size,
 void do_reload_eextrac(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx);
 
-void ecall_writer1(long hash_chain, char key[32], char value[100], int key_size, int value_size, uint64_t seqno) {
-  ecall_writer(global_eid,hash_chain,key,value,key_size,value_size,seqno);
+void ecall_writer1(long hash_chain, char key[32], int key_size, uint64_t seqno) {
+  ecall_writer(global_eid,hash_chain,key,key_size,seqno);
 }
 void ecall_verify1(long hash_chain, char key[32],int key_size,uint64_t seqno, int isMem) {
   ecall_verify(global_eid,hash_chain,key,key_size,seqno,isMem);
+}
+void ecall_verify_sim1() {
+  ecall_verify_sim(global_eid);
 }
 void ecall_verify_file1(int merkle_height) {
   ecall_verify_file(global_eid,merkle_height);

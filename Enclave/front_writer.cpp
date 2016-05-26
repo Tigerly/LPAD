@@ -37,33 +37,23 @@ struct mht_node** out_tree = (struct mht_node**)malloc(100*sizeof(struct mht_nod
 
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
-void static add_chain(long chain_address, const char* message, int message_len, uint64_t seqno) {
-  struct hash_chain* my_chain = (struct hash_chain *)chain_address;
-  if ((!my_chain->prev_valid) && (my_chain->start == my_chain->tail)) {
-    memcpy(buf,message,KEY_SIZE);
-    memcpy(buf+KEY_SIZE,&seqno,SEQ_SIZE);
-    sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
-    sha3_final(ret,DIGEST_SIZE);
-    memcpy(&my_chain->raw_data[my_chain->tail*DIGEST_SIZE],ret,DIGEST_SIZE);
-    start_seq = seqno;
-  }
-  else {
-    if (my_chain->prev_valid) {
-      memcpy(buf,my_chain->prev,20);
-      start_seq = seqno;
-      my_chain->prev_valid = 0;
-    }
-    else 
-      memcpy(buf,&my_chain->raw_data[(my_chain->tail-1)*20],20);
-    memcpy(buf+DIGEST_SIZE,message,16);
-    memcpy(buf+DIGEST_SIZE+KEY_SIZE,&seqno,8);
-    sha3_update((unsigned const char*)buf,40);
-    sha3_final(ret,20);
-    memcpy(&my_chain->raw_data[my_chain->tail*20],ret,20);
-  }
-  my_chain->tail++;
+
+void enclave_verify_file(int merkle_height) {
+//  for (int i=0;i<merkle_height;i++) {
+//    sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
+ //   sha3_final(ret,DIGEST_SIZE);
+//  }
 }
-void enclave_writer(long chain_address, char key[16], char value[100], int key_size, int value_size, uint64_t seqno) {
+void static add_chain(long chain_address, const char* message, int message_len, uint64_t seqno) {
+    return;
+    int tmp = 7000;//my_chain->tail-my_chain->start;
+    int merkle_height=0;
+    while (tmp >>= 1) { ++merkle_height; }
+    merkle_height++;
+    enclave_verify_file(2*merkle_height);
+}
+
+void enclave_writer(long chain_address, char key[16], int key_size, uint64_t seqno) {
   if (seqno == last_seq + 1) {
     last_seq = seqno;
     add_chain(chain_address, key,key_size,seqno);
@@ -117,104 +107,59 @@ int timeTraverse(long chain, int start, int end){
 }
 
 void enclave_notify(long chain_address) {
-  struct hash_chain *my_chain = (struct hash_chain *)chain_address;
-  if (my_chain->reason==1) { 
-    //    bar1("before flush imm_start=%d imm_end=%d\n",my_chain->imm_start,my_chain->imm_end);
-    my_chain->imm_start = 0;
-    my_chain->imm_end = 0;
-    //bar1("after flush imm_start=0 imm_end=0\n");
-  }
-  else {
-    //    bar1("before flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid);
-    my_chain->imm_start = my_chain->start;
-    my_chain->imm_end = my_chain->tail-1;
-    memcpy(my_chain->prev,&my_chain->raw_data[my_chain->imm_end],20);
-    my_chain->prev_valid = 1;
-    my_chain->start = 30000-my_chain->start;
-    my_chain->tail = my_chain->start;
-    imm_start_seq = start_seq;
-    /* reorder immutable memtable to time-ordered*/
-   
-   uint64_t tag;
-    uint64_t min;
-    uint64_t max;
-    memcpy(&tag,my_chain->imm_data+16,8);
-    min = max = tag>>8;
-    int pos;
-    int j=0;
-    for (int i=0;i<my_chain->imm_end-my_chain->imm_start+1;i++) {
-      memcpy(&tag,my_chain->imm_data+j+16,8);
-      tag = tag>>8;
-      if (tag<min) min=tag;
-      if (tag>max) max=tag;
-      j+=24;
-    // pos = tag - imm_start_seq;
-      pos = 0;
-      memcpy(reordered_imm_data+pos*24,my_chain->imm_data+j,24);
-    }
-    /* time traverse to verify*/
-    int isCorrect=0;
-    isCorrect = timeTraverse(chain_address,my_chain->imm_start,my_chain->imm_end);
-    if (isCorrect==0) {}//abort();
-
-    /* build merkle tree*/
-    int k=0;
-    for (int i=0;i<my_chain->imm_end-my_chain->imm_start+1;i++) {
-      build_merkle(out_tree,(const char *)my_chain->imm_data+k,24);
-      k+=24;
-    }
-  //  bar1("after flip max=%lu and min=%lu\n",max,min);
-  //  bar1("after flip imm_start=%d imm_end=%d start=%d, tail=%d, prev_valid=%d, imm_start_seq=%lu\n",my_chain->imm_start,my_chain->imm_end,my_chain->start,my_chain->tail,my_chain->prev_valid,imm_start_seq);
-  } 
 }
 
-void enclave_verify_file(int merkle_height) {
-  for (int i=0;i<merkle_height;i++) {
-    sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
-    sha3_final(ret,DIGEST_SIZE);
-  }
-}
 
-void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int isMem) {
+
+void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int ismem) {
+  return;
   struct hash_chain *my_chain = (struct hash_chain *)chain;
   int verify_start = 0;
-  int isCorrect = 0;
-  if (isMem == 1) {
+  int iscorrect = 0;
+  if (ismem == 1) {
     //   bar1("found in mem, start_seq=%lu, target_seq=%lu, start=%d,tail=%d\n",start_seq,seqno,my_chain->start,my_chain->tail);
     //  verify_start = my_chain->start+seqno-start_seq;
-    //  isCorrect = timeTraverse(chain,verify_start,my_chain->tail-1);
-    //  if (isCorrect == 0){} // abort();      
-    int tmp = my_chain->tail-my_chain->start;
+    //  iscorrect = timetraverse(chain,verify_start,my_chain->tail-1);
+    //  if (iscorrect == 0){} // abort();      
+    int tmp = 7000;//my_chain->tail-my_chain->start;
     int merkle_height=0;
     while (tmp >>= 1) { ++merkle_height; }
     merkle_height++;
-    enclave_verify_file(2*merkle_height);
+    enclave_verify_file(merkle_height);
 
-  } else if (isMem==2) {
+  } else if (ismem==2) {
     // bar1("verifiy partial imm seqno=%lu imm_start_seq=%lu\n",seqno,imm_start_seq);
-    //   isCorrect = timeTraverse(chain,my_chain->imm_start+seqno-imm_start_seq,my_chain->imm_end);
-    int tmp = my_chain->imm_end-my_chain->imm_start;
+    //   iscorrect = timetraverse(chain,my_chain->imm_start+seqno-imm_start_seq,my_chain->imm_end);
+    int tmp = 7000;//my_chain->imm_end-my_chain->imm_start;
     int merkle_height=0;
     while (tmp >>= 1) { ++merkle_height; }
     merkle_height++;
-    enclave_verify_file(2*merkle_height);
+    enclave_verify_file(merkle_height);
 
   } else {
     //        bar1("verify entire imm\n");
     /* method 1 - verify over merkle-tree*/
-    int tmp = my_chain->imm_end-my_chain->imm_start;
+    int tmp = 7000;//my_chain->imm_end-my_chain->imm_start;
     int merkle_height=0;
     while (tmp >>= 1) { ++merkle_height; }
     merkle_height++;
-    enclave_verify_file(2*merkle_height);
+    enclave_verify_file(merkle_height);
 
     /* method 2 - hash chain verifying*/
-    //  isCorrect = timeTraverse(chain,my_chain->imm_start,my_chain->imm_end);
-    //  if (isCorrect == 0){} //abort();
-    //  isCorrect = timeTraverse(chain,my_chain->start,my_chain->tail-1);
-    //  if (isCorrect == 0){} //abort();
+    //  iscorrect = timetraverse(chain,my_chain->imm_start,my_chain->imm_end);
+    //  if (iscorrect == 0){} //abort();
+    //  iscorrect = timetraverse(chain,my_chain->start,my_chain->tail-1);
+    //  if (iscorrect == 0){} //abort();
   }
 }
 
+
+void enclave_verify_sim() {
+    int tmp = 700;//my_chain->tail-my_chain->start;
+    int merkle_height=0;
+    while (tmp >>= 1) { ++merkle_height; }
+    merkle_height++;
+    enclave_verify_file(merkle_height);
+}
 
 

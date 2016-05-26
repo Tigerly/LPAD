@@ -38,9 +38,10 @@
 #define VERIFY 0
 int ecall_foo1(int file_count, long arg1, long arg2);
 int ecall_notify1(long chain_address);
-void ecall_writer1(long chain_address, char key[16], char value[100], int key_size, int value_size, uint64_t seqno);
+void ecall_writer1(long chain_address, char key[16], int key_size, uint64_t seqno);
 leveldb::Iterator** g_list;
 void ecall_verify1(long hash_chain, char key[16],int key_size,uint64_t seqno, int isMem);
+void ecall_verify_sim1();
 leveldb::DBImpl* myInstance;
 std::string g_current_user_key;
 bool g_has_current_user_key = false;
@@ -748,6 +749,14 @@ namespace leveldb {
     reinterpret_cast<DBImpl*>(db)->BackgroundCall();
   }
 
+  void DBImpl::BGWork1(void* db) {
+   //   static int count=0;
+   //   count++;
+  //    printf("BG work count=%d\n",count);
+      ecall_verify_sim1();
+     // printf("bg work1\n");
+  }
+
   void DBImpl::BackgroundCall() {
     MutexLock l(&mutex_);
     assert(bg_compaction_scheduled_);
@@ -1114,7 +1123,7 @@ namespace leveldb {
     return Status::OK();
   }
 // original version
-#if 0
+#if 1
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1280,7 +1289,7 @@ namespace leveldb {
   }
 #endif
 // SU hack version 
-#if 1
+#if 0
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1438,17 +1447,20 @@ namespace leveldb {
       if (mem->Get1(lkey, value, &s, &seq)) {
         // Done
 #if VERIFY
+    //    env_->Schedule(&DBImpl::BGWork1,NULL);
         ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
 #endif
     //  } else if (imm != NULL && imm->Get(lkey, value, &s)) {
       } else if (imm != NULL && imm->Get1(lkey, value, &s, &seq)) {
 #if VERIFY
-        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
+     //   env_->Schedule(&DBImpl::BGWork1,NULL);
+      ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
 #endif
         // Done
       } else {
 #if VERIFY
-        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,3);
+    //    env_->Schedule(&DBImpl::BGWork1,NULL);
+       ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,3);
 #endif
         s = current->Get(options, lkey, value, &stats);
         have_stat_update = true;
@@ -1559,7 +1571,7 @@ namespace leveldb {
         Slice key;
         Slice value;
         updates->Iterate1(&key,&value);
-        ecall_writer1((long)&my_chain, (char *)key.data(),(char *)value.data(),16,100,seqno);
+        ecall_writer1((long)&my_chain, (char *)key.data(),16,seqno);
         /* SU hack end */
 #endif
 

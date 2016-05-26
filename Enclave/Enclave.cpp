@@ -49,16 +49,21 @@ void ecall_sgx_cpuid(int cpuinfo[4], int leaf)
 }
 
 
-void enclave_writer(long chain, char key[16], char value[100], int key_size, int value_size, uint64_t seqno);
+void enclave_writer(long chain, char key[16],int key_size, uint64_t seqno);
 void enclave_notify(long chain);
 void enclave_verify_file(int merkle_height);
+void enclave_verify_sim();
 void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int isMem);
-void ecall_writer(long chain, char key[16], char value[100], int key_size, int value_size, uint64_t seqno) {
-  enclave_writer(chain, key, value,key_size, value_size, seqno);
+void ecall_writer(long chain, char key[16], int key_size, uint64_t seqno) {
+  enclave_writer(chain, key,key_size, seqno);
 }
 
 void ecall_verify(long chain, char key[16], int key_size, uint64_t seqno, int isMem) {
   enclave_verify(chain,key,key_size,seqno,isMem);
+}
+
+void ecall_verify_sim() {
+  enclave_verify_sim();
 }
 void ecall_notify(long chain) {
   enclave_notify(chain);
