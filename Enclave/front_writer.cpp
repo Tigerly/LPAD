@@ -41,19 +41,19 @@ void* sha1(void* message, int message_len, void* digest);
 
 void enclave_verify_file(int merkle_height) {
   for (int i=0;i<merkle_height;i++) {
-   // sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
-  //  sha3_final(ret,DIGEST_SIZE);
-      sha1(buf,KEY_SIZE+SEQ_SIZE,ret);
+    // sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
+    //  sha3_final(ret,DIGEST_SIZE);
+    sha1(buf,KEY_SIZE+SEQ_SIZE,ret);
   }
 }
 void static add_chain(long chain_address, const char* message, int message_len, uint64_t seqno) {
-    static int write_count=0;
-    
-    int tmp = 7000;//my_chain->tail-my_chain->start;
-    int merkle_height=0;
-    while (tmp >>= 1) { ++merkle_height; }
-    merkle_height++;
-    enclave_verify_file(2*merkle_height);
+  static int write_count=0;
+
+  int tmp = 7000;//my_chain->tail-my_chain->start;
+  int merkle_height=0;
+  while (tmp >>= 1) { ++merkle_height; }
+  merkle_height++;
+  enclave_verify_file(2*merkle_height);
 }
 
 void enclave_writer(long chain_address, char key[16], int key_size, uint64_t seqno) {
@@ -69,9 +69,8 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
   unsigned char carry[20];
   unsigned char m[40];
   struct mht_node* node = (struct mht_node*)malloc(sizeof(struct mht_node));
-  //  sha1(message,message_len,node->digest);
-//  sha3_update((unsigned const char*)message,message_len);
-//  sha3_final(node->digest,20);
+  //  sha3_update((unsigned const char*)message,message_len);
+  //  sha3_final(node->digest,20);
   sha1((void *)message,message_len,node->digest);
   memcpy(carry,node->digest,20);
   for (i=0;i<100;i++) {
@@ -83,8 +82,8 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
       memcpy(m,tree[i]->digest,20);
       memcpy(m+20,carry,20);
       // sha1(m,40,carry);
-   //   sha3_update((unsigned const char*)m,40);
-   //   sha3_final(carry,20);
+      //   sha3_update((unsigned const char*)m,40);
+      //   sha3_final(carry,20);
       sha1(m,40,carry);
       if (tree[i]!=NULL)
         free(tree[i]);
@@ -96,7 +95,6 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
 
 int timeTraverse(long chain, int start, int end){
   int i;
-  // bar1("time traverse start=%d, end=%d\n",start,end);
   int status;
   struct hash_chain *my_chain = (struct hash_chain *)chain;
   for (int i=start;i<end;i++) {
@@ -120,7 +118,6 @@ void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int 
   int verify_start = 0;
   int iscorrect = 0;
   if (ismem == 1) {
-    //   bar1("found in mem, start_seq=%lu, target_seq=%lu, start=%d,tail=%d\n",start_seq,seqno,my_chain->start,my_chain->tail);
     //  verify_start = my_chain->start+seqno-start_seq;
     //  iscorrect = timetraverse(chain,verify_start,my_chain->tail-1);
     //  if (iscorrect == 0){} // abort();      
@@ -131,7 +128,6 @@ void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int 
     enclave_verify_file(merkle_height);
 
   } else if (ismem==2) {
-    // bar1("verifiy partial imm seqno=%lu imm_start_seq=%lu\n",seqno,imm_start_seq);
     //   iscorrect = timetraverse(chain,my_chain->imm_start+seqno-imm_start_seq,my_chain->imm_end);
     int tmp = 7000;//my_chain->imm_end-my_chain->imm_start;
     int merkle_height=0;
@@ -140,7 +136,6 @@ void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int 
     enclave_verify_file(merkle_height);
 
   } else {
-    //        bar1("verify entire imm\n");
     /* method 1 - verify over merkle-tree*/
     int tmp = 7000;//my_chain->imm_end-my_chain->imm_start;
     int merkle_height=0;
@@ -158,11 +153,11 @@ void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int 
 
 
 void enclave_verify_sim() {
-    int tmp = 700;//my_chain->tail-my_chain->start;
-    int merkle_height=0;
-    while (tmp >>= 1) { ++merkle_height; }
-    merkle_height++;
-    enclave_verify_file(merkle_height);
+  int tmp = 700;//my_chain->tail-my_chain->start;
+  int merkle_height=0;
+  while (tmp >>= 1) { ++merkle_height; }
+  merkle_height++;
+  enclave_verify_file(merkle_height);
 }
 
 

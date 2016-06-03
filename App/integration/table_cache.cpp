@@ -9,7 +9,6 @@
 #include "table.h"
 #include "coding.h"
 
-#define VERIFY 1
 void ecall_verify_file1(int merkle_height);
 namespace leveldb {
 
@@ -131,15 +130,11 @@ namespace leveldb {
     uint64_t num_records = (file_size)/(2<<20)*7000;
     static int merkle_count=0;
     static int file_count=0;
- //   file_count++;
-#if VERIFY
+#ifdef VERIFY
         while (tmp >>= 1) { ++merkle_height; }
         merkle_height++;
         while (num_records >>= 1) { ++merkle_height; }
         merkle_height++;
-    //   merkle_count+=merkle_height;
-      //  if (merkle_count%100==0) printf("merkle_count=%d\n",merkle_count);
-      //  if (file_count%100==0) printf("file_count=%d\n",file_count);
 #endif
     Cache::Handle* handle = NULL;
     Status s = FindTable(file_number, file_size, &handle);
@@ -147,7 +142,7 @@ namespace leveldb {
       Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
       s = t->InternalGet(options, k, arg, saver);
       cache_->Release(handle);
-#if VERIFY
+#ifdef VERIFY
       ecall_verify_file1(merkle_height);
 #endif
     }

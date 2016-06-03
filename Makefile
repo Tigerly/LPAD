@@ -4,7 +4,11 @@ SGX_SDK ?= /opt/intel/sgxsdk
 #SGX_MODE ?= SIM
 SGX_MODE ?= HW
 SGX_PRELEASE ?= 1
-LDB_INT = 1
+
+#turn on this bit to enable enclave verify
+LSM_VERIFY ?= 0
+#turn on this bit to enable profiling
+PROFILE ?= 0
 
 ifneq ($(SGX_DEBUG), 1) 
 	SGX_PRERELEASE ?= 1
@@ -38,7 +42,7 @@ endif
 ifeq ($(SGX_DEBUG), 1)
         SGX_COMMON_CFLAGS += -O0 -g
 else
-        SGX_COMMON_CFLAGS += -O2
+        SGX_COMMON_CFLAGS += -O0
 endif
 
 
@@ -120,7 +124,13 @@ LEVELDB_INT_FILES := App/integration/builder.cpp \
 App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
-APP_C_Flags += -fno-builtin-memcmp -DOS_LINUX -DLEVELDB_PLATFORM_POSIX -DLEVELDB_ATOMIC_PRESENT
+App_C_Flags += -fno-builtin-memcmp -DOS_LINUX -DLEVELDB_PLATFORM_POSIX -DLEVELDB_ATOMIC_PRESENT
+ifeq ($(LSM_VERIFY), 1)
+App_C_Flags += -DVERIFY
+endif
+ifeq ($(PROFILE), 1)
+App_C_Flags += -pg
+endif
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -136,6 +146,9 @@ endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11
 App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread 
+ifeq ($(PROFILE), 1)
+App_Link_Flags += -pg
+endif
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim
