@@ -1123,7 +1123,7 @@ namespace leveldb {
     return Status::OK();
   }
 // original version
-#if 1
+#if 0
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1289,7 +1289,7 @@ namespace leveldb {
   }
 #endif
 // SU hack version 
-#if 0
+#if 1
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1533,6 +1533,7 @@ namespace leveldb {
     Status status = MakeRoomForWrite(my_batch == NULL);
     uint64_t last_sequence = versions_->LastSequence();
     Writer* last_writer = &w;
+    static int write_count=0;
     if (status.ok() && my_batch != NULL) {  // NULL batch is for compactions
       WriteBatch* updates = BuildBatchGroup(&last_writer);
       WriteBatchInternal::SetSequence(updates, last_sequence + 1);

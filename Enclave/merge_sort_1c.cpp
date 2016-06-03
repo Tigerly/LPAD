@@ -23,13 +23,15 @@ struct mht_node {
 #define MERKLE_TREE 1
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
+void* sha1(void* message, int message_len, void* digest);
 void static insert(struct mht_node** tree, const char* message, int message_len) {
   int i = 0;
   unsigned char carry[20];
   unsigned char m[40];
   struct mht_node* node = (struct mht_node*)malloc(sizeof(struct mht_node));
-  sha3_update((unsigned const char*)message,message_len);
-  sha3_final(node->digest,20);
+ // sha3_update((unsigned const char*)message,message_len);
+ // sha3_final(node->digest,20);
+    sha1((void *)message,message_len,node->digest);
   memcpy(carry,node->digest,20);
   for (i=0;i<100;i++) {
     if (tree[i] == NULL) {
@@ -39,8 +41,9 @@ void static insert(struct mht_node** tree, const char* message, int message_len)
     } else {
       memcpy(m,tree[i]->digest,20);
       memcpy(m+20,carry,20);
-      sha3_update((unsigned const char*)m,40);
-      sha3_final(carry,20);
+     // sha3_update((unsigned const char*)m,40);
+     // sha3_final(carry,20);
+      sha1(m,40,carry);
       if (tree[i]!=NULL)
         free(tree[i]);
       tree[i]=NULL;

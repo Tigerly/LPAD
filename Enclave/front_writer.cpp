@@ -37,15 +37,18 @@ struct mht_node** out_tree = (struct mht_node**)malloc(100*sizeof(struct mht_nod
 
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
+void* sha1(void* message, int message_len, void* digest);
 
 void enclave_verify_file(int merkle_height) {
-//  for (int i=0;i<merkle_height;i++) {
-//    sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
- //   sha3_final(ret,DIGEST_SIZE);
-//  }
+  for (int i=0;i<merkle_height;i++) {
+   // sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
+  //  sha3_final(ret,DIGEST_SIZE);
+      sha1(buf,KEY_SIZE+SEQ_SIZE,ret);
+  }
 }
 void static add_chain(long chain_address, const char* message, int message_len, uint64_t seqno) {
-    return;
+    static int write_count=0;
+    
     int tmp = 7000;//my_chain->tail-my_chain->start;
     int merkle_height=0;
     while (tmp >>= 1) { ++merkle_height; }
@@ -67,8 +70,9 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
   unsigned char m[40];
   struct mht_node* node = (struct mht_node*)malloc(sizeof(struct mht_node));
   //  sha1(message,message_len,node->digest);
-  sha3_update((unsigned const char*)message,message_len);
-  sha3_final(node->digest,20);
+//  sha3_update((unsigned const char*)message,message_len);
+//  sha3_final(node->digest,20);
+  sha1((void *)message,message_len,node->digest);
   memcpy(carry,node->digest,20);
   for (i=0;i<100;i++) {
     if (tree[i] == NULL) {
@@ -79,8 +83,9 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
       memcpy(m,tree[i]->digest,20);
       memcpy(m+20,carry,20);
       // sha1(m,40,carry);
-      sha3_update((unsigned const char*)m,40);
-      sha3_final(carry,20);
+   //   sha3_update((unsigned const char*)m,40);
+   //   sha3_final(carry,20);
+      sha1(m,40,carry);
       if (tree[i]!=NULL)
         free(tree[i]);
       tree[i]=NULL;
@@ -101,7 +106,6 @@ int timeTraverse(long chain, int start, int end){
     sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
     sha3_final(ret,DIGEST_SIZE);
     status = memcmp(ret,&my_chain->raw_data[start*20],20);
-    // if (status!=0) return;
   } 
   return 1;
 }
@@ -112,7 +116,6 @@ void enclave_notify(long chain_address) {
 
 
 void enclave_verify(long chain, char key[16], int key_size, uint64_t seqno, int ismem) {
-  return;
   struct hash_chain *my_chain = (struct hash_chain *)chain;
   int verify_start = 0;
   int iscorrect = 0;

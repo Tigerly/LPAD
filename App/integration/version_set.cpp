@@ -18,7 +18,6 @@
 #include "coding.h"
 #include "logging.h"
 
-#define VERFIY 1
 void ecall_verify_file1(int merkle_height);
 namespace leveldb {
 
@@ -331,9 +330,6 @@ namespace leveldb {
     const Comparator* ucmp = vset_->icmp_.user_comparator();
     Status s;
 
-    static int files_count = 0;
-    static int levels_count = 0;
-    static int merkle_count = 0;
     stats->seek_file = NULL;
     stats->seek_file_level = -1;
     FileMetaData* last_file_read = NULL;
@@ -386,12 +382,8 @@ namespace leveldb {
           }
         }
       }
-      levels_count+=level;
-      if (levels_count%100==0) printf("levels_count=%d\n",levels_count);
       for (uint32_t i = 0; i < num_files; ++i) {
-    files_count+=num_files;
-    if (files_count%100==0) printf("files_count = %d\n",files_count); 
-        if (last_file_read != NULL && stats->seek_file == NULL) {
+       if (last_file_read != NULL && stats->seek_file == NULL) {
           // We have had more than one seek for this read.  Charge the 1st file.
           stats->seek_file = last_file_read;
           stats->seek_file_level = last_file_read_level;
@@ -406,16 +398,6 @@ namespace leveldb {
         saver.ucmp = ucmp;
         saver.user_key = user_key;
         saver.value = value;
-        uint64_t tmp = files_[level].size();
-        uint64_t num_records = f->file_size/(2<<20)*7000;
-        int merkle_height=0;
-        while (tmp >>= 1) { ++merkle_height; }
-        merkle_height++;
-        while (num_records >>= 1) { ++merkle_height; }
-        merkle_height++;
-        merkle_count+=merkle_height;
-        if (merkle_count%100==0) printf("merkle_count=%d\n",merkle_count);
-     //   ecall_verify_file1(3*merkle_height);
         s = vset_->table_cache_->Get1(options,files_[level].size(), f->number, f->file_size,
             ikey, &saver, SaveValue);
         if (!s.ok()) {
