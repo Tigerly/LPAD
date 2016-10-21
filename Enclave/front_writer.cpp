@@ -1,11 +1,20 @@
 #include "Enclave_t.h"  /* bar*/
 #include "Enclave.h"  /* bar1*/
 #include <string.h>
+#include <sgx_thread.h>
+#include <map>
+#include <algorithm>
 struct hashchain_node {
   unsigned char digest[20];
 };
 uint64_t last_seq = 0;
 
+static size_t global_counter = 0;
+static sgx_thread_mutex_t global_mutex = SGX_THREAD_MUTEX_INITIALIZER;
+
+typedef std::map<int,int > map_t;
+typedef map_t::value_type map_value;
+map_t global_map;
 #define DIGEST_SIZE 20
 #define KEY_SIZE 16
 #define SEQ_SIZE 8
@@ -46,7 +55,7 @@ void enclave_verify_file(int merkle_height) {
     sha1(buf,KEY_SIZE+SEQ_SIZE,ret);
   }
 }
-void static add_chain(long chain_address, const char* message, int message_len, uint64_t seqno) {
+void static add_chain() {
   static int write_count=0;
 
   int tmp = 7000;//my_chain->tail-my_chain->start;
@@ -56,13 +65,15 @@ void static add_chain(long chain_address, const char* message, int message_len, 
   enclave_verify_file(2*merkle_height);
 }
 
-void enclave_writer(long chain_address, char key[16], int key_size, uint64_t seqno) {
-  if (seqno == last_seq + 1) {
-    last_seq = seqno;
-    add_chain(chain_address, key,key_size,seqno);
-  } else {
+void enclave_writer() {
+//  if (seqno == last_seq + 1) {
+//    last_seq = seqno;
+    add_chain();
+    
+   // add_chain(chain_address, key,key_size,seqno);
+//  } else {
     // abort
-  }
+//  }
 }
 void static build_merkle(struct mht_node** tree, const char* message, int message_len) {
   int i = 0;
@@ -158,6 +169,18 @@ void enclave_verify_sim() {
   while (tmp >>= 1) { ++merkle_height; }
   merkle_height++;
   enclave_verify_file(merkle_height);
+}
+
+void enclave_preget() {
+  sgx_thread_mutex_lock(&global_mutex);
+  global_map.insert(map_value(0,0));
+  sgx_thread_mutex_unlock(&global_mutex);
+}
+
+void enclave_postget(){
+  sgx_thread_mutex_lock(&global_mutex);
+  global_map.find(0);
+  sgx_thread_mutex_unlock(&global_mutex);
 }
 
 

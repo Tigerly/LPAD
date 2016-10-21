@@ -1,12 +1,12 @@
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/intel/sgxsdk
-#SGX_MODE ?= SIM
-SGX_MODE ?= HW
+SGX_MODE ?= SIM
+#SGX_MODE ?= HW
 SGX_PRELEASE ?= 1
 
 #turn on this bit to enable enclave verify
-LSM_VERIFY ?= 0
+LSM_VERIFY ?= 1
 #turn on this bit to enable profiling
 PROFILE ?= 0
 

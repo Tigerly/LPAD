@@ -37,7 +37,7 @@
 #define DIGEST_SIZE 20
 int ecall_foo1(int file_count, long arg1, long arg2);
 int ecall_notify1(long chain_address);
-void ecall_writer1(long chain_address, char key[16], int key_size, uint64_t seqno);
+void ecall_writer1();
 leveldb::Iterator** g_list;
 void ecall_verify1(long hash_chain, char key[16],int key_size,uint64_t seqno, int isMem);
 void ecall_verify_sim1();
@@ -606,7 +606,7 @@ namespace leveldb {
     stats.bytes_written = meta.file_size;
     stats_[level].Add(stats);
     my_chain.reason = 1;
-#ifdef VERIFY
+#if 0
     ecall_notify1((long)&my_chain);
 #endif
     return s;
@@ -1122,7 +1122,7 @@ namespace leveldb {
     return Status::OK();
   }
 // original version
-#ifndef VERIFY
+#ifdef VERIFY
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1288,7 +1288,7 @@ namespace leveldb {
   }
 #endif
 // SU hack version 
-#ifdef VERIFY
+#ifndef VERIFY
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1565,13 +1565,14 @@ namespace leveldb {
       if (updates == tmp_batch_) tmp_batch_->Clear();
 
       versions_->SetLastSequence(last_sequence);
-#ifdef VERIFY
+#if VERIFY
         /* SU hack start */
-        uint64_t seqno = versions_->LastSequence();
+      //  uint64_t seqno = versions_->LastSequence();
+        uint64_t seqno=0;
         Slice key;
         Slice value;
-        updates->Iterate1(&key,&value);
-        ecall_writer1((long)&my_chain, (char *)key.data(),16,seqno);
+      //  updates->Iterate1(&key,&value);
+        ecall_writer1();
         /* SU hack end */
 #endif
 
@@ -1700,7 +1701,7 @@ namespace leveldb {
         log_ = new log::Writer(lfile);
         imm_ = mem_;
         my_chain.reason = 0;
-#ifdef VERIFY
+#if 0
 
         Iterator* imm_iter = imm_->NewIterator();
         imm_iter->SeekToFirst();

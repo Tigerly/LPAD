@@ -8,7 +8,6 @@
 # include <time.h>
 # include <sys/time.h>
 #include "sgx_urts.h"
-#include "sgx_status.h"
 #include "App.h"
 #include "Enclave_u.h"
 
@@ -38,8 +37,16 @@ void do_flush_eextrac(int key_size, int value_size,
 void do_reload_eextrac(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx);
 
-void ecall_writer1(long hash_chain, char key[32], int key_size, uint64_t seqno) {
-  ecall_writer(global_eid,hash_chain,key,key_size,seqno);
+void ecall_preget1() {
+  ecall_preget(global_eid);
+}
+
+void ecall_postget1() {
+  ecall_postget(global_eid);
+}
+
+void ecall_writer1() {
+  ecall_writer(global_eid);
 }
 void ecall_verify1(long hash_chain, char key[32],int key_size,uint64_t seqno, int isMem) {
   ecall_verify(global_eid,hash_chain,key,key_size,seqno,isMem);
