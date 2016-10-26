@@ -20,18 +20,20 @@ struct enclave_g_arg_t *cookie;
 struct mht_node {
   unsigned char digest[20];
 };
-#define MERKLE_TREE 1
+#define MERKLE_TREE 0
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
 void* sha1(void* message, int message_len, void* digest);
+
+#if 0
 void static insert(struct mht_node** tree, const char* message, int message_len) {
   int i = 0;
   unsigned char carry[20];
   unsigned char m[40];
   struct mht_node* node = (struct mht_node*)malloc(sizeof(struct mht_node));
- // sha3_update((unsigned const char*)message,message_len);
- // sha3_final(node->digest,20);
-    sha1((void *)message,message_len,node->digest);
+  // sha3_update((unsigned const char*)message,message_len);
+  // sha3_final(node->digest,20);
+  sha1((void *)message,message_len,node->digest);
   memcpy(carry,node->digest,20);
   for (i=0;i<100;i++) {
     if (tree[i] == NULL) {
@@ -41,8 +43,8 @@ void static insert(struct mht_node** tree, const char* message, int message_len)
     } else {
       memcpy(m,tree[i]->digest,20);
       memcpy(m+20,carry,20);
-     // sha3_update((unsigned const char*)m,40);
-     // sha3_final(carry,20);
+      // sha3_update((unsigned const char*)m,40);
+      // sha3_final(carry,20);
       sha1(m,40,carry);
       if (tree[i]!=NULL)
         free(tree[i]);
@@ -50,9 +52,36 @@ void static insert(struct mht_node** tree, const char* message, int message_len)
     }
   }
 }
+#endif
+void static insert(const char* message, int message_len) {
+  int i = 0;
+  unsigned char carry[20];
+  unsigned char m[40];
+  unsigned char dummy[20];
+  int tree[100];
+  // sha3_update((unsigned const char*)message,message_len);
+  // sha3_final(node->digest,20);
+  sha1((void *)message,message_len,dummy);
+  //memcpy(carry,dummy,20);
+  for (i=0;i<100;i++) {
+    if (tree[i] == 0) {
+      tree[i] = 1;
+      //memcpy(dummy,carry,20);
+      break;
+    } else {
+      //memcpy(m,dummy,20);
+      //memcpy(m+20,carry,20);
+      // sha3_update((unsigned const char*)m,40);
+      // sha3_final(carry,20);
+      sha1(m,40,carry);
+      tree[i]=0;
+    }
+  }
+}
+
 int onec_readKV(int channel) {
   if (cookie->in_index[channel] == INPUT_BUFFER_SIZE || cookie->in_index[channel] == -1) {
-    ocall_1c_reload(channel);
+    //ocall_1c_reload(channel);
     cookie->in_index[channel] = -1;
     if (cookie->data_count[channel] == 0) {
       return 0;
@@ -71,7 +100,7 @@ int onec_writeKV(int channel) {
   int out_start=0;
   int input_start=0;
   if (cookie->out_index==OUTPUT_BUFFER_SIZE) {
-    ocall_1c_flush();
+    //ocall_1c_flush();
     cookie->out_index = 0;
   }
   out_start = cookie->out_index << 5;
@@ -119,19 +148,21 @@ void onec_EnclCompact(int file_count, long user_arg)
   int count = file_count;
   cookie = (struct enclave_g_arg_t *)user_arg;
   char* message;
-  int message_len; 
-  struct mht_node **current_tree; 
-  struct mht_node** mht_trees[10];
-  struct mht_node** out_tree;
-  for (int i=0;i<10;i++) {
-    struct mht_node** res = (struct mht_node**)malloc(100*sizeof(struct mht_node*));
-    for (int j=0;j<100;j++)
-      res[j] = NULL;
-    mht_trees[i]=res;
-  }
-  out_tree = (struct mht_node**)malloc(100*sizeof(struct mht_node*));
-  for (int j=0;j<100;j++)
-    out_tree[j] = NULL;
+  int message_len;
+  /* 
+     struct mht_node **current_tree; 
+     struct mht_node** mht_trees[10];
+     struct mht_node** out_tree;
+     for (int i=0;i<10;i++) {
+     struct mht_node** res = (struct mht_node**)malloc(100*sizeof(struct mht_node*));
+     for (int j=0;j<100;j++)
+     res[j] = NULL;
+     mht_trees[i]=res;
+     }
+     out_tree = (struct mht_node**)malloc(100*sizeof(struct mht_node*));
+     for (int j=0;j<100;j++)
+     out_tree[j] = NULL;
+   */
   int next;
   for (int i=0;i<file_count;i++)
     onec_readKV(i);
@@ -141,15 +172,17 @@ void onec_EnclCompact(int file_count, long user_arg)
 #if MERKLE_TREE
     message = &cookie->key_data[next][cookie->in_index[next] <<5];
     message_len = cookie->key_sizes[next][cookie->in_index[next]];
-    current_tree = mht_trees[next];
-    insert(current_tree,message,message_len);
-    insert(out_tree,message,message_len);
+    //  current_tree = mht_trees[next];
+    //insert(current_tree,message,message_len);
+    //  insert(out_tree,message,message_len);
+    insert(message,message_len);
+    insert(message,message_len);
 #endif
     onec_writeKV(next);
     if (onec_readKV(next) == 0) {
       count--;
     }
   }
-  ocall_1c_flush();
+  //ocall_1c_flush();
   cookie->out_index=0;
 }

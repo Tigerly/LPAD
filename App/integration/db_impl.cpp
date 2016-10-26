@@ -1122,7 +1122,7 @@ namespace leveldb {
     return Status::OK();
   }
 // original version
-#ifdef VERIFY
+#ifndef VERIFY
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1147,6 +1147,13 @@ namespace leveldb {
 
     // Release mutex while we're actually doing the compaction work
     mutex_.Unlock();
+
+ //   int n_ways;
+ //   g_list = versions_->SU_PrepareInputs(compact->compaction,&n_ways);
+ //   for (int i=0;i<n_ways;i++)
+  //    g_list[i]->SeekToFirst();
+ //   SU_compact(compact,n_ways);
+ //   delete[] g_list; 
 
     Iterator* input = versions_->MakeInputIterator(compact->compaction);
     input->SeekToFirst();
@@ -1288,7 +1295,7 @@ namespace leveldb {
   }
 #endif
 // SU hack version 
-#ifndef VERIFY
+#ifdef VERIFY
   Status DBImpl::DoCompactionWork(CompactionState* compact) {
     const uint64_t start_micros = env_->NowMicros();
     int64_t imm_micros = 0;  // Micros spent doing imm_ compactions

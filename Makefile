@@ -6,7 +6,7 @@ SGX_MODE ?= SIM
 SGX_PRELEASE ?= 1
 
 #turn on this bit to enable enclave verify
-LSM_VERIFY ?= 1
+LSM_VERIFY ?= 0
 #turn on this bit to enable profiling
 PROFILE ?= 0
 
@@ -186,7 +186,7 @@ Enclave_zc_Files := Enclave/zerocpy/ecall_entry.cpp \
                          Enclave/zerocpy/sha3.cpp
 
 #Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_zc_Files)
-Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp Enclave/sha3.cpp Enclave/front_writer.cpp Enclave/sha1.cpp
+Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp Enclave/sha3.cpp Enclave/front_writer.cpp Enclave/sha1.cpp Enclave/cc.cpp
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)

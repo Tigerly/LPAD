@@ -791,11 +791,11 @@ namespace leveldb {
           char key[100];
           const int k = thread->rand.Next() % FLAGS_num;
           snprintf(key, sizeof(key), "%016d", k);
-          ecall_preget1();
+        //  ecall_preget1();
           if (db_->Get(options, key, &value).ok()) {
             found++;
           }
-          ecall_postget1();
+       //   ecall_postget1();
           thread->stats.FinishedSingleOp();
         }
         char msg[100];
