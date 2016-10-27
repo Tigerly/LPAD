@@ -118,7 +118,7 @@ namespace leveldb {
     }
     return s;
   }
-  Status TableCache::Get1(const ReadOptions& options,
+  Status TableCache::SUGet(const ReadOptions& options,
       int num_of_files,
       uint64_t file_number,
       uint64_t file_size,

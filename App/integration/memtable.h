@@ -62,7 +62,7 @@ class MemTable {
   // in *status and return true.
   // Else, return false.
   bool Get(const LookupKey& key, std::string* value, Status* s);
-  bool Get1(const LookupKey& key, std::string* value, Status* s,uint64_t* seq);
+  bool SUGet(const LookupKey& key, std::string* value, Status* s,uint64_t* seq);
 
  private:
   ~MemTable();  // Private since only Unref() should be used to delete it

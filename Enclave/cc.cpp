@@ -5,18 +5,22 @@
 #include <sgx_thread.h>
 #include <map>
 #include <algorithm>
-#include <atomic>
 
 
-std::atomic<int> g_time = 0;
 static sgx_thread_mutex_t global_mutex = SGX_THREAD_MUTEX_INITIALIZER;
 
 typedef std::map<int,int > map_t;
 typedef map_t::value_type map_value;
 map_t global_map;
+unsigned int g_counter=0;
 
 Realtime getTime() {
-  return 0;
+  Realtime local;
+  sgx_thread_mutex_lock(&global_mutex);
+  g_counter++;
+  local=g_counter;
+  sgx_thread_mutex_unlock(&global_mutex);
+  return local;
 }
 /*
 class store_wrapper{

@@ -104,7 +104,7 @@ void MemTable::Add(SequenceNumber s, ValueType type,
   assert((p + val_size) - buf == encoded_len);
   table_.Insert(buf);
 }
-bool MemTable::Get1(const LookupKey& key, std::string* value, Status* s, uint64_t* seq) {
+bool MemTable::SUGet(const LookupKey& key, std::string* value, Status* s, uint64_t* seq) {
   Slice memkey = key.memtable_key();
   Table::Iterator iter(&table_);
   iter.Seek(memkey.data());

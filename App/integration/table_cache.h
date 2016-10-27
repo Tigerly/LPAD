@@ -44,7 +44,7 @@ class TableCache {
              void* arg,
              void (*handle_result)(void*, const Slice&, const Slice&));
 
-  Status Get1(const ReadOptions& options,
+  Status SUGet(const ReadOptions& options,
              int num_of_files,
              uint64_t file_number,
              uint64_t file_size,
