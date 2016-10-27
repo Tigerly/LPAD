@@ -61,6 +61,10 @@ class DB {
   virtual Status Put(const WriteOptions& options,
                      const Slice& key,
                      const Slice& value) = 0;
+  virtual Status SUPut(const WriteOptions& options,
+                     const Slice& key,
+                     const Slice& value,
+                      unsigned long *seq) = 0;
 
   // Remove the database entry (if any) for "key".  Returns OK on
   // success, and a non-OK status on error.  It is not an error if "key"
@@ -72,6 +76,7 @@ class DB {
   // Returns OK on success, non-OK on failure.
   // Note: consider setting options.sync = true.
   virtual Status Write(const WriteOptions& options, WriteBatch* updates) = 0;
+  virtual Status SUWrite(const WriteOptions& options, WriteBatch* updates, unsigned long *seq) = 0;
 
   // If the database contains an entry for "key" store the
   // corresponding value in *value and return OK.

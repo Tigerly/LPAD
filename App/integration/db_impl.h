@@ -34,8 +34,10 @@ class DBImpl : public DB {
 
   // Implementations of the DB interface
   virtual Status Put(const WriteOptions&, const Slice& key, const Slice& value);
+  virtual Status SUPut(const WriteOptions&, const Slice& key, const Slice& value, unsigned long *seq);
   virtual Status Delete(const WriteOptions&, const Slice& key);
   virtual Status Write(const WriteOptions& options, WriteBatch* updates);
+  virtual Status SUWrite(const WriteOptions& options, WriteBatch* updates, unsigned long *seq);
   virtual Status Get(const ReadOptions& options,
                      const Slice& key,
                      std::string* value);

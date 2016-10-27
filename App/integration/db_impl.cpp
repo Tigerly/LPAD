@@ -1580,8 +1580,95 @@ namespace leveldb {
         return  DB::Put(o,key,val); 
       }
 
+      Status DBImpl::SUPut(const WriteOptions& o, const Slice& key, const Slice& val, unsigned long *seq) {
+        return  DB::SUPut(o,key,val,seq); 
+      }
+
       Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
         return DB::Delete(options, key);
+      }
+
+      Status DBImpl::SUWrite(const WriteOptions& options, WriteBatch* my_batch, unsigned long *seq) {
+        Writer w(&mutex_);
+        w.batch = my_batch;
+        w.sync = options.sync;
+        w.done = false;
+        MutexLock l(&mutex_);
+        writers_.push_back(&w);
+        while (!w.done && &w != writers_.front()) {
+          w.cv.Wait();
+        }
+        if (w.done) {
+          return w.status;
+        }
+
+        // May temporarily unlock and wait.
+        Status status = MakeRoomForWrite(my_batch == NULL);
+        uint64_t last_sequence = versions_->LastSequence();
+        Writer* last_writer = &w;
+        static int write_count=0;
+        if (status.ok() && my_batch != NULL) {  // NULL batch is for compactions
+          WriteBatch* updates = BuildBatchGroup(&last_writer);
+          WriteBatchInternal::SetSequence(updates, last_sequence + 1);
+          last_sequence += WriteBatchInternal::Count(updates);
+          // Add to log and apply to memtable.  We can release the lock
+          // during this phase since &w is currently responsible for logging
+          // and protects against concurrent loggers and concurrent writes
+          // into mem_.
+          {
+            mutex_.Unlock();
+            status = log_->AddRecord(WriteBatchInternal::Contents(updates));
+            bool sync_error = false;
+            if (status.ok() && options.sync) {
+              status = logfile_->Sync();
+              if (!status.ok()) {
+                sync_error = true;
+              }
+            }
+            if (status.ok()) {
+              status = WriteBatchInternal::InsertInto(updates, mem_);
+            }
+            mutex_.Lock();
+            if (sync_error) {
+              // The state of the log file is indeterminate: the log record we
+              // just added may or may not show up when the DB is re-opened.
+              // So we force the DB into a mode where all future writes fail.
+              RecordBackgroundError(status);
+            }
+          }
+          if (updates == tmp_batch_) tmp_batch_->Clear();
+
+          *seq = last_sequence;
+          versions_->SetLastSequence(last_sequence);
+#if VERIFY
+          /* SU hack start */
+          //  uint64_t seqno = versions_->LastSequence();
+          uint64_t seqno=0;
+          Slice key;
+          Slice value;
+          //  updates->Iterate1(&key,&value);
+          ecall_writer1();
+          /* SU hack end */
+#endif
+
+        }
+
+        while (true) {
+          Writer* ready = writers_.front();
+          writers_.pop_front();
+          if (ready != &w) {
+            ready->status = status;
+            ready->done = true;
+            ready->cv.Signal();
+          }
+          if (ready == last_writer) break;
+        }
+
+        // Notify new head of write queue
+        if (!writers_.empty()) {
+          writers_.front()->cv.Signal();
+        }
+        return status;
       }
 
       Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
@@ -1881,6 +1968,12 @@ namespace leveldb {
         WriteBatch batch;
         batch.Put(key, value);
         return  Write(opt, &batch);
+      }
+
+      Status DB::SUPut(const WriteOptions& opt, const Slice& key, const Slice& value, unsigned long *seq) {
+        WriteBatch batch;
+        batch.Put(key, value);
+        return  SUWrite(opt, &batch, seq);
       }
 
       Status DB::Delete(const WriteOptions& opt, const Slice& key) {
