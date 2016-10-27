@@ -18,7 +18,9 @@
 #include "random.h"
 #include "testutil.h"
 void ecall_preget1();
-void ecall_postget1();
+void ecall_postget1(unsigned long seq, unsigned long tw);
+void ecall_preput1();
+void ecall_postput1(unsigned long seq);
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
 //      fillseq       -- write N values in sequential key order in async mode
@@ -748,7 +750,10 @@ namespace leveldb {
             bytes += value_size_ + strlen(key);
             thread->stats.FinishedSingleOp();
           }
-          s = db_->Write(write_options_, &batch);
+          unsigned long seq;
+          ecall_preput1();
+          s = db_->SUWrite(write_options_, &batch, &seq);
+          ecall_postput1(seq);
           if (!s.ok()) {
             fprintf(stderr, "put error: %s\n", s.ToString().c_str());
             exit(1);
@@ -791,11 +796,13 @@ namespace leveldb {
           char key[100];
           const int k = thread->rand.Next() % FLAGS_num;
           snprintf(key, sizeof(key), "%016d", k);
-        //  ecall_preget1();
-          if (db_->Get(options, key, &value).ok()) {
+          unsigned long seq;
+          unsigned long tw;
+          ecall_preget1();
+          if (db_->SUGet(options, key, &value, &seq, &tw).ok()) {
             found++;
           }
-       //   ecall_postget1();
+          ecall_postget1(seq,tw);
           thread->stats.FinishedSingleOp();
         }
         char msg[100];

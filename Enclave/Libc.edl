@@ -25,6 +25,8 @@ enclave {
     public void ecall_verify_file(int merkle_height);
     public void ecall_verify_sim();
     public void ecall_preget();
-    public void ecall_postget();
+    public void ecall_postget(unsigned long seq, unsigned long tw);
+    public void ecall_preput();
+    public void ecall_postput(unsigned long seq);
   };
 };

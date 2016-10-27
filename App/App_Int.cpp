@@ -41,10 +41,17 @@ void ecall_preget1() {
   ecall_preget(global_eid);
 }
 
-void ecall_postget1() {
-  ecall_postget(global_eid);
+void ecall_postget1(unsigned long seq, unsigned long tw) {
+  ecall_postget(global_eid,seq,tw);
 }
 
+void ecall_preput1() {
+  ecall_preput(global_eid);
+}
+
+void ecall_postput1(unsigned long seq) {
+  ecall_postput(global_eid,seq);
+}
 void ecall_writer1() {
   ecall_writer(global_eid);
 }

@@ -75,13 +75,27 @@ void assertL2(r<key,val,tsr,tsrw,pf(tsrw,tsr*)>,history_w)
 {
 */
 void enclave_preget() {
-  sgx_thread_mutex_lock(&global_mutex);
-  global_map.insert(map_value(0,0));
-  sgx_thread_mutex_unlock(&global_mutex);
+//  sgx_thread_mutex_lock(&global_mutex);
+//  global_map.insert(map_value(0,0));
+//  sgx_thread_mutex_unlock(&global_mutex);
 }
 
-void enclave_postget(){
-  sgx_thread_mutex_lock(&global_mutex);
-  global_map.find(0);
-  sgx_thread_mutex_unlock(&global_mutex);
+void enclave_postget(unsigned long seq, unsigned long tw){
+//  sgx_thread_mutex_lock(&global_mutex);
+//  global_map.find(0);
+//  sgx_thread_mutex_unlock(&global_mutex);
+    bar1("r %ld with %ld\n",seq,tw);
+}
+
+void enclave_preput() {
+//  sgx_thread_mutex_lock(&global_mutex);
+//  global_map.insert(map_value(0,0));
+//  sgx_thread_mutex_unlock(&global_mutex);
+}
+
+void enclave_postput(unsigned long seq){
+//  sgx_thread_mutex_lock(&global_mutex);
+//  global_map.find(0);
+//  sgx_thread_mutex_unlock(&global_mutex);
+    bar1("w %ld\n",seq);
 }

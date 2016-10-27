@@ -48,8 +48,10 @@ void ecall_sgx_cpuid(int cpuinfo[4], int leaf)
     abort();
 }
 
+void enclave_preput();
+void enclave_postput(unsigned long seq);
 void enclave_preget();
-void enclave_postget();
+void enclave_postget(unsigned long seq, unsigned long tw);
 void enclave_writer();
 void enclave_notify(long chain);
 void enclave_verify_file(int merkle_height);
@@ -78,6 +80,14 @@ void ecall_preget(){
   enclave_preget();
 }
 
-void ecall_postget(){
-  enclave_postget();
+void ecall_postget(unsigned long seq,unsigned long tw){
+  enclave_postget(seq,tw);
+}
+
+void ecall_preput(){
+  enclave_preput();
+}
+
+void ecall_postput(unsigned long seq){
+  enclave_postput(seq);
 }
