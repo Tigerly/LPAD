@@ -17,10 +17,10 @@
 #include "mutexlock.h"
 #include "random.h"
 #include "testutil.h"
-void ecall_preget1();
-void ecall_postget1(unsigned long seq, unsigned long tw);
-void ecall_preput1();
-void ecall_postput1(unsigned long seq);
+void ecall_preget1(unsigned int id[]);
+void ecall_postget1(char key[], unsigned int id,unsigned long seq, unsigned long tw);
+void ecall_preput1(unsigned int id[]);
+void ecall_postput1(char key[],unsigned int id, unsigned long seq);
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
 //      fillseq       -- write N values in sequential key order in async mode
@@ -66,7 +66,7 @@ static const char* FLAGS_benchmarks =
 ;
 
 // Number of key/values to place in database
-static int FLAGS_num = 1000000;
+static int FLAGS_num = 10;
 //static int FLAGS_num = 28250;
 
 // Number of read operations to do.  If negative, do FLAGS_num reads.
@@ -742,18 +742,21 @@ namespace leveldb {
         int64_t bytes = 0;
         for (int i = 0; i < num_; i += entries_per_batch_) {
           batch.Clear();
+          char key[100];
           for (int j = 0; j < entries_per_batch_; j++) {
             const int k = seq ? i+j : (thread->rand.Next() % FLAGS_num);
-            char key[100];
+            //char key[100];
+            memset(key,100,0);
             snprintf(key, sizeof(key), "%016d", k);
             batch.Put(key, gen.Generate(value_size_));
             bytes += value_size_ + strlen(key);
             thread->stats.FinishedSingleOp();
           }
           unsigned long seq;
-          ecall_preput1();
+          unsigned int id[1];
+          ecall_preput1(id);
           s = db_->SUWrite(write_options_, &batch, &seq);
-          ecall_postput1(seq);
+          ecall_postput1(key,id[0],seq);
           if (!s.ok()) {
             fprintf(stderr, "put error: %s\n", s.ToString().c_str());
             exit(1);
@@ -798,11 +801,12 @@ namespace leveldb {
           snprintf(key, sizeof(key), "%016d", k);
           unsigned long seq;
           unsigned long tw;
-          ecall_preget1();
+          unsigned int id[1];
+          ecall_preget1(id);
           if (db_->SUGet(options, key, &value, &seq, &tw).ok()) {
             found++;
           }
-          ecall_postget1(seq,tw);
+          ecall_postget1(key,id[0],seq,tw);
           thread->stats.FinishedSingleOp();
         }
         char msg[100];

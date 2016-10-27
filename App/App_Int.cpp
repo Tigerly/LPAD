@@ -37,20 +37,20 @@ void do_flush_eextrac(int key_size, int value_size,
 void do_reload_eextrac(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx);
 
-void ecall_preget1() {
-  ecall_preget(global_eid);
+void ecall_preget1(unsigned int id[]) {
+  ecall_preget(global_eid,id);
 }
 
-void ecall_postget1(unsigned long seq, unsigned long tw) {
-  ecall_postget(global_eid,seq,tw);
+void ecall_postget1(char input[], unsigned int id, unsigned long seq, unsigned long tw) {
+  ecall_postget(global_eid,input,id,seq,tw);
 }
 
-void ecall_preput1() {
-  ecall_preput(global_eid);
+void ecall_preput1(unsigned int id[]) {
+  ecall_preput(global_eid,id);
 }
 
-void ecall_postput1(unsigned long seq) {
-  ecall_postput(global_eid,seq);
+void ecall_postput1(char key[], unsigned int id, unsigned long seq) {
+  ecall_postput(global_eid,key,id,seq);
 }
 void ecall_writer1() {
   ecall_writer(global_eid);

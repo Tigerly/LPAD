@@ -1,6 +1,7 @@
 typedef int Crt;
 typedef unsigned int Timestamp;
 typedef unsigned int Realtime;
+typedef unsigned int Opid;
 class Op {
   public:
     Op(int key){
@@ -9,6 +10,11 @@ class Op {
     Op(int key, int val) {
       this->key = key;
       this->val = val;
+    }
+
+    Op(Opid id, Realtime s) {
+      this->id = id;
+      this->start = s;
     }
 /*
     Op(int key, int val, Timestamp ts_att, Timestamp ts_rw, Proof* pf, Realtime start, Realtime end){
@@ -21,13 +27,15 @@ class Op {
       this->end = end;
     }
 */
+    Opid id; 
     void setStart(Realtime start) {this->start=start;}
     void setEnd(Realtime end) {this->end=end;}
-    int key = -1;
-    int val = -1;
-    Timestamp ts_att = -1;
-    Timestamp ts_rw = -1;
-    Realtime start = -1;
-    Realtime end = -1;
+    Realtime getStart() {return start;}
+    int key;
+    int val;
+    Timestamp ts_att;
+    Timestamp ts_rw;
+    Realtime start;
+    Realtime end;
 //    Proof* pf;
 };
