@@ -45,9 +45,13 @@ void enclave_preget(unsigned int idd[]) {
   Op op(id,time);
   idd[0]=id;
   sgx_thread_mutex_lock(&g_mutex);
+  op.setTs(history.latest().getTs());
   pending_list.insert(map_value(id,op));
   sgx_thread_mutex_unlock(&g_mutex);
   //bar1("[%ld] pre_r id=%ld\n",time,id);
+}
+
+void nmt(Op op, HistoryW& his) {
 }
 
 void enclave_postget(char key[],unsigned int id,unsigned long seq, unsigned long tw){
@@ -55,6 +59,8 @@ void enclave_postget(char key[],unsigned int id,unsigned long seq, unsigned long
   sgx_thread_mutex_lock(&g_mutex);
   Op op = pending_list.find(id)->second;
   pending_list.erase(id);
+  op.setTRW(tw);
+  nmt(op,history);
   sgx_thread_mutex_unlock(&g_mutex);
   //bar1("[%ld] post_r %ld with %ld key=%s\n",time,seq,tw,key);
 }
@@ -79,19 +85,21 @@ void truncate(map_t& comp,HistoryW& his, vector_t& acl) {
   }
 }
 
-void check(vector_t& acl) {
-  if (acl.size()==1) return;
+bool check(vector_t& acl) {
+  if (acl.size()==1) return true;
   for (int i=0;i<acl.size();i++) {
       for (int j=i+1;j<acl.size();i++) {
-          if (acl[j].getEnd()<=acl[i].getStart()) {}//abort
+          if (acl[j].getEnd()<=acl[i].getStart()) {return false;}
       }
   }
+  return true;
 }
 
-void merge(HistoryW& his, vector_t& acl) {
+bool try_merge(HistoryW& his, vector_t& acl) {
+  if (acl[0].getEnd() < his.latest().getStart()) return false;
   for(int i=0;i<acl.size();i++)
     his.update(acl[i]);
-  //bar1("histroy updated to %ld\n",his.latest().getTs());
+  return true;
 }
 
 void enclave_postput(char key[],unsigned int id,unsigned long seq){
@@ -106,9 +114,9 @@ void enclave_postput(char key[],unsigned int id,unsigned long seq){
   vector_t acl;
   //truncate
   truncate(completed_list,history,acl);
-  //check
+  if (!check(acl)) //abort
   //merge
-  merge(history,acl);
+  if (!try_merge(history,acl)) //abort
   
   sgx_thread_mutex_unlock(&g_mutex);
   //bar1("[%ld,%ld] post_w %ld key=%s\n",op.getStart(),time,seq,key);

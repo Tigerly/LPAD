@@ -32,6 +32,7 @@ class Op {
     void setStart(Realtime start) {this->start=start;}
     void setEnd(Realtime end) {this->end=end;}
     void setTs(Timestamp ts) {this->ts_att=ts;}
+    void setTRW(Timestamp tw) {this->ts_rw=tw;}
     Realtime getStart() {return start;}
     Realtime getEnd() {return end;}
     Timestamp getTs() {return ts_att;}
