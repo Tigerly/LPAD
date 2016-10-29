@@ -1,7 +1,11 @@
+#include <map>
+#include <vector>
 typedef int Crt;
 typedef unsigned int Timestamp;
 typedef unsigned int Realtime;
 typedef unsigned int Opid;
+class RH {};
+typedef std::map<unsigned long, RH > rhlist_t;
 class Op {
   public:
     Op(){}
@@ -32,10 +36,13 @@ class Op {
     void setStart(Realtime start) {this->start=start;}
     void setEnd(Realtime end) {this->end=end;}
     void setTs(Timestamp ts) {this->ts_att=ts;}
-    void setTRW(Timestamp tw) {this->ts_rw=tw;}
+    void setTr(Timestamp tr) {this->ts_att=tr;}
+    void setTw(Timestamp tw) {this->ts_rw=tw;}
     Realtime getStart() {return start;}
     Realtime getEnd() {return end;}
+    Timestamp getTw() {return ts_rw;}
     Timestamp getTs() {return ts_att;}
+    Timestamp getTr() {return ts_att;}
     int key;
     int val;
     Timestamp ts_att;
@@ -56,7 +63,15 @@ public:
   Op latest(){return current;}
   void update(Op op) {
     this->current=op;
+  //  rh_list.push_back(NULL);
+  }
+
+  RH findRH(unsigned long tr) {
+    RH rh = rh_list.find(tr)->second;
+    return rh;
   }
 private:
   Op current;
+  rhlist_t rh_list;
 };
+

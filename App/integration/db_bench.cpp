@@ -754,9 +754,9 @@ namespace leveldb {
           }
           unsigned long seq;
           unsigned int id[1];
-          //ecall_preput1(id);
+          ecall_preput1(id);
           s = db_->SUWrite(write_options_, &batch, &seq);
-          //ecall_postput1(key,id[0],seq);
+          ecall_postput1(key,id[0],seq);
           if (!s.ok()) {
             fprintf(stderr, "put error: %s\n", s.ToString().c_str());
             exit(1);
@@ -802,11 +802,11 @@ namespace leveldb {
           unsigned long seq;
           unsigned long tw;
           unsigned int id[1];
-          //ecall_preget1(id);
+          ecall_preget1(id);
           if (db_->SUGet(options, key, &value, &seq, &tw).ok()) {
             found++;
           }
-          //ecall_postget1(key,id[0],seq,tw);
+          ecall_postget1(key,id[0],seq,tw);
           thread->stats.FinishedSingleOp();
         }
         char msg[100];
