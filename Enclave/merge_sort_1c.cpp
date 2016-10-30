@@ -20,7 +20,7 @@ struct enclave_g_arg_t *cookie;
 struct mht_node {
   unsigned char digest[20];
 };
-#define MERKLE_TREE 0
+#define MERKLE_TREE 1
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
 void* sha1(void* message, int message_len, void* digest);
@@ -81,7 +81,7 @@ void static insert(const char* message, int message_len) {
 
 int onec_readKV(int channel) {
   if (cookie->in_index[channel] == INPUT_BUFFER_SIZE || cookie->in_index[channel] == -1) {
-    //ocall_1c_reload(channel);
+    ocall_1c_reload(channel);
     cookie->in_index[channel] = -1;
     if (cookie->data_count[channel] == 0) {
       return 0;
@@ -100,7 +100,7 @@ int onec_writeKV(int channel) {
   int out_start=0;
   int input_start=0;
   if (cookie->out_index==OUTPUT_BUFFER_SIZE) {
-    //ocall_1c_flush();
+    ocall_1c_flush();
     cookie->out_index = 0;
   }
   out_start = cookie->out_index << 5;
@@ -175,6 +175,7 @@ void onec_EnclCompact(int file_count, long user_arg)
     //  current_tree = mht_trees[next];
     //insert(current_tree,message,message_len);
     //  insert(out_tree,message,message_len);
+   // bar1("called\n");
     insert(message,message_len);
     insert(message,message_len);
 #endif
@@ -183,6 +184,6 @@ void onec_EnclCompact(int file_count, long user_arg)
       count--;
     }
   }
-  //ocall_1c_flush();
+  ocall_1c_flush();
   cookie->out_index=0;
 }

@@ -94,24 +94,29 @@ void truncate(map_t& comp,HistoryW& his, vector_t& acl) {
   while (comp.find(cur)!=comp.end()) {
     acl.push_back(comp.find(cur)->second);
     comp.erase(cur);
+    //bar1("erase %ld\n",cur);
     cur++;
   }
 }
 
 bool check(vector_t& acl) {
+  //bar1("in check and acl.length=%d\n",acl.size());
   if (acl.size()==1) return true;
   for (int i=0;i<acl.size();i++) {
-    for (int j=i+1;j<acl.size();i++) {
-      if (acl[j].getEnd()<=acl[i].getStart()) {return false;}
+    for (int j=i+1;j<acl.size();j++) {
+      if (acl[j].getEnd()<=acl[i].getStart()) {bar1("error dected\n");}//return false;}
     }
   }
   return true;
 }
 
 bool try_merge(HistoryW& his, vector_t& acl) {
+  if (acl.size()==0) return true;
   if (acl[0].getEnd() < his.latest().getStart()) return false;
-  for(int i=0;i<acl.size();i++)
+  for(int i=0;i<acl.size();i++) {
     his.update(acl[i]);
+    //bar1("history update to %ld\n",acl[i].getTs());
+  }
   return true;
 }
 
@@ -122,8 +127,8 @@ void enclave_postput(char key[],unsigned int id,unsigned long seq){
   op.setEnd(time);
   op.setTs(seq);
   pending_list.erase(id);
-  completed_list.insert(map_value(id,op));
-
+  completed_list.insert(map_value(seq,op));
+  //bar1("insert %ld\n",seq);
   vector_t acl;
   //truncate
   truncate(completed_list,history,acl);

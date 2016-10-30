@@ -6,7 +6,7 @@ SGX_MODE ?= SIM
 SGX_PRELEASE ?= 1
 
 #turn on this bit to enable enclave verify
-LSM_VERIFY ?= 0
+LSM_VERIFY ?= 1
 #turn on this bit to enable profiling
 PROFILE ?= 0
 

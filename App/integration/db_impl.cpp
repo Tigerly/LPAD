@@ -151,6 +151,7 @@ namespace leveldb {
     WriteBatch* batch;
     bool sync;
     bool done;
+    unsigned long seq;
     port::CondVar cv;
 
     explicit Writer(port::Mutex* mu) : cv(mu) { }
@@ -1599,18 +1600,22 @@ namespace leveldb {
           w.cv.Wait();
         }
         if (w.done) {
+          *seq = w.seq;
           return w.status;
         }
 
         // May temporarily unlock and wait.
         Status status = MakeRoomForWrite(my_batch == NULL);
         uint64_t last_sequence = versions_->LastSequence();
+        //printf("pre last sequence in SU to %ld\n",last_sequence);
         Writer* last_writer = &w;
         static int write_count=0;
         if (status.ok() && my_batch != NULL) {  // NULL batch is for compactions
-          WriteBatch* updates = BuildBatchGroup(&last_writer);
+          WriteBatch* updates = BuildBatchGroup(&last_writer,last_sequence);
+          //printf("updates count =%d\n",WriteBatchInternal::Count(updates));
           WriteBatchInternal::SetSequence(updates, last_sequence + 1);
           last_sequence += WriteBatchInternal::Count(updates);
+          //printf("post last sequence in SU to %ld\n",last_sequence);
           // Add to log and apply to memtable.  We can release the lock
           // during this phase since &w is currently responsible for logging
           // and protects against concurrent loggers and concurrent writes
@@ -1691,7 +1696,7 @@ namespace leveldb {
         Writer* last_writer = &w;
         static int write_count=0;
         if (status.ok() && my_batch != NULL) {  // NULL batch is for compactions
-          WriteBatch* updates = BuildBatchGroup(&last_writer);
+          WriteBatch* updates = BuildBatchGroup(&last_writer,last_sequence);
           WriteBatchInternal::SetSequence(updates, last_sequence + 1);
           last_sequence += WriteBatchInternal::Count(updates);
           // Add to log and apply to memtable.  We can release the lock
@@ -1755,7 +1760,7 @@ namespace leveldb {
 
       // REQUIRES: Writer list must be non-empty
       // REQUIRES: First writer must have a non-NULL batch
-      WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
+      WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer, unsigned long sequence) {
         assert(!writers_.empty());
         Writer* first = writers_.front();
         WriteBatch* result = first->batch;
@@ -1774,6 +1779,7 @@ namespace leveldb {
         *last_writer = first;
         std::deque<Writer*>::iterator iter = writers_.begin();
         ++iter;  // Advance past "first"
+        int i=1;
         for (; iter != writers_.end(); ++iter) {
           Writer* w = *iter;
           if (w->sync && !first->sync) {
@@ -1798,6 +1804,8 @@ namespace leveldb {
             WriteBatchInternal::Append(result, w->batch);
           }
           *last_writer = w;
+          w->seq = sequence+i;
+          i++;
         }
         return result;
       }

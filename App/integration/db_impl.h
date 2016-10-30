@@ -112,7 +112,7 @@ class DBImpl : public DB {
 
   Status MakeRoomForWrite(bool force /* compact even if there is room? */)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  WriteBatch* BuildBatchGroup(Writer** last_writer);
+  WriteBatch* BuildBatchGroup(Writer** last_writer, unsigned long seq);
 
   void RecordBackgroundError(const Status& s);
 
