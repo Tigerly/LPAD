@@ -18,7 +18,7 @@
 #include "random.h"
 #include "testutil.h"
 void ecall_preget1(unsigned int id[]);
-void ecall_postget1(char key[], unsigned int id,unsigned long seq, unsigned long tw);
+void ecall_postget1(char key[], unsigned int id,unsigned long seq, unsigned long tw, int pf[], int pf_index);
 void ecall_preput1(unsigned int id[]);
 void ecall_postput1(char key[],unsigned int id, unsigned long seq);
 // Comma-separated list of operations to run in the specified order
@@ -66,14 +66,14 @@ static const char* FLAGS_benchmarks =
 ;
 
 // Number of key/values to place in database
-static int FLAGS_num = 1000000;
+static int FLAGS_num = 10000000;
 //static int FLAGS_num = 28250;
 
 // Number of read operations to do.  If negative, do FLAGS_num reads.
 static int FLAGS_reads = -1;
 
 // Number of concurrent threads to run.
-static int FLAGS_threads = 8;
+static int FLAGS_threads = 1;
 
 // Size of each value
 static int FLAGS_value_size = 100;
@@ -481,6 +481,7 @@ namespace leveldb {
           } else if (name == Slice("readreverse")) {
             method = &Benchmark::ReadReverse;
           } else if (name == Slice("readrandom")) {
+            num_threads=8;
             method = &Benchmark::ReadRandom;
           } else if (name == Slice("readmissing")) {
             method = &Benchmark::ReadMissing;
@@ -803,10 +804,15 @@ namespace leveldb {
           unsigned long tw;
           unsigned int id[1];
           ecall_preget1(id);
-          if (db_->SUGet(options, key, &value, &seq, &tw).ok()) {
+          int pf[1000];
+          int pf_index=0;
+          if (db_->SUGet(options, key, &value, &seq, &tw,pf,&pf_index).ok()) {
             found++;
           }
-          ecall_postget1(key,id[0],seq,tw);
+          //for (int i=0;i<pf_index;i++)
+          //  printf("%d\n",pf[i]);
+          //printf("heheh\n");
+          ecall_postget1(key,id[0],seq,tw,pf,pf_index);
           thread->stats.FinishedSingleOp();
         }
         char msg[100];

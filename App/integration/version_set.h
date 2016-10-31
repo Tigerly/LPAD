@@ -73,7 +73,7 @@ class Version {
   Status Get(const ReadOptions&, const LookupKey& key, std::string* val,
              GetStats* stats);
   Status SUGet(const ReadOptions&, const LookupKey& key, std::string* val,
-             GetStats* stats, unsigned long *seq);
+             GetStats* stats, unsigned long *seq,int* pf, int* pf_index);
 
   // Adds "stats" into the current state.  Returns true if a new
   // compaction may need to be triggered, false otherwise.

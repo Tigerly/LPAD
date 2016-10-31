@@ -1423,7 +1423,7 @@ namespace leveldb {
   }
   Status DBImpl::SUGet(const ReadOptions& options,
       const Slice& key,
-      std::string* value, unsigned long *seq, unsigned long *tw) {
+      std::string* value, unsigned long *seq, unsigned long *tw, int* pf, int* pf_index) {
     Status s;
     MutexLock l(&mutex_);
     SequenceNumber snapshot;
@@ -1455,22 +1455,28 @@ namespace leveldb {
         // Done
 #ifdef VERIFY
         //    env_->Schedule(&DBImpl::BGWork1,NULL);
-        ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
+        //ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,1);
+        pf[*pf_index] = 13;
+        *pf_index = (*pf_index)+1;
 #endif
         //  } else if (imm != NULL && imm->Get(lkey, value, &s)) {
     } else if (imm != NULL && imm->SUGet(lkey, value, &s, tw)) {
 #ifdef VERIFY
       //   env_->Schedule(&DBImpl::BGWork1,NULL);
-      ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
+      //ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,2);
+      pf[*pf_index] = 13;
+      *pf_index = (*pf_index)+1;
 #endif
       // Done
     } else {
 #ifdef VERIFY
       //    env_->Schedule(&DBImpl::BGWork1,NULL);
-      ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,3);
+      //ecall_verify1((long)&my_chain,(char *)key.data(),key.size(),seq,3);
+      pf[*pf_index] = 13;
+      *pf_index = (*pf_index)+1;
 #endif
     //  s = current->Get(options, lkey, value, &stats);
-      s = current->SUGet(options, lkey, value, &stats, tw);
+      s = current->SUGet(options, lkey, value, &stats, tw, pf, pf_index);
       have_stat_update = true;
     }
     mutex_.Lock();

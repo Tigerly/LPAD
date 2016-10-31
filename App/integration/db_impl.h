@@ -43,7 +43,7 @@ class DBImpl : public DB {
                      std::string* value);
   virtual Status SUGet(const ReadOptions& options,
                      const Slice& key,
-                     std::string* value, unsigned long *seq, unsigned long *tw);
+                     std::string* value, unsigned long *seq, unsigned long *tw, int* pf, int* pf_index);
   virtual Iterator* NewIterator(const ReadOptions&);
   virtual const Snapshot* GetSnapshot();
   virtual void ReleaseSnapshot(const Snapshot* snapshot);

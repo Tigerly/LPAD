@@ -124,7 +124,7 @@ namespace leveldb {
       uint64_t file_size,
       const Slice& k,
       void* arg,
-      void (*saver)(void*, const Slice&, const Slice&)) {
+      void (*saver)(void*, const Slice&, const Slice&), int* pf, int* pf_index) {
     int merkle_height = 0;
     uint64_t tmp = num_of_files;
     uint64_t num_records = (file_size)/(2<<20)*7000;
@@ -143,8 +143,10 @@ namespace leveldb {
       s = t->InternalGet(options, k, arg, saver);
       cache_->Release(handle);
 #ifdef VERIFY
-      ecall_verify_file1(merkle_height);
+    //  ecall_verify_file1(merkle_height);
 #endif
+      pf[*pf_index] = merkle_height;
+      *pf_index = (*pf_index)+1;
     }
     return s;
   }

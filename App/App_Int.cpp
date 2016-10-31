@@ -41,8 +41,8 @@ void ecall_preget1(unsigned int id[]) {
   ecall_preget(global_eid,id);
 }
 
-void ecall_postget1(char input[], unsigned int id, unsigned long seq, unsigned long tw) {
-  ecall_postget(global_eid,input,id,seq,tw);
+void ecall_postget1(char input[], unsigned int id, unsigned long seq, unsigned long tw, int pf[], int pf_index) {
+  ecall_postget(global_eid,input,id,seq,tw, pf,pf_index);
 }
 
 void ecall_preput1(unsigned int id[]) {

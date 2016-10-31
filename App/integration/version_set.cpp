@@ -327,7 +327,7 @@ namespace leveldb {
       const LookupKey& k,
       std::string* value,
       GetStats* stats,
-      unsigned long *seq) {
+      unsigned long *seq, int* pf, int* pf_index) {
     Slice ikey = k.internal_key();
     Slice user_key = k.user_key();
     const Comparator* ucmp = vset_->icmp_.user_comparator();
@@ -402,7 +402,7 @@ namespace leveldb {
         saver.value = value;
         saver.seq = seq;
         s = vset_->table_cache_->SUGet(options,files_[level].size(), f->number, f->file_size,
-            ikey, &saver, SaveValue);
+            ikey, &saver, SaveValue,pf,pf_index);
         if (!s.ok()) {
           return s;
         }

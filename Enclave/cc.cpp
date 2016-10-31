@@ -52,28 +52,29 @@ void enclave_preget(unsigned int idd[]) {
   //bar1("[%ld] pre_r id=%ld\n",time,id);
 }
 
-bool lpad_verify(RH rh) {
+bool lpad_verify(RH rh,int pf[],int pf_index) {
   unsigned char buf[44];
   unsigned char ret[20];
-  for(int i=0;i<20;i++)
-    sha1(buf,24,ret);
+  for(int i=0;i<pf_index;i++)
+    for (int j=0;i<pf[i];j++)
+      sha1(buf,24,ret);
   return true;
 }
 
-bool nmt(Op op, HistoryW& his) {
+bool nmt(Op op, HistoryW& his, int pf[], int pf_index) {
   if (op.getTw() > op.getTr()) return true;
   RH rh = his.findRH(op.getTr());
-  if (!lpad_verify(rh)) return false;//proof(tw,rw))
+  if (!lpad_verify(rh,pf,pf_index)) return false;//proof(tw,rw))
   return true;
 }
 
-void enclave_postget(char key[],unsigned int id,unsigned long seq, unsigned long tw){
+void enclave_postget(char key[],unsigned int id,unsigned long seq, unsigned long tw, int pf[], int pf_index){
   Realtime time = getTime();
   sgx_thread_mutex_lock(&g_mutex);
   Op op = pending_list.find(id)->second;
   pending_list.erase(id);
   op.setTw(tw);
-  if (!nmt(op,history)) return;
+  if (!nmt(op,history,pf,pf_index)) return;
   sgx_thread_mutex_unlock(&g_mutex);
   //bar1("[%ld] post_r %ld with %ld key=%s\n",time,seq,tw,key);
 }
