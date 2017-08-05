@@ -103,6 +103,41 @@ namespace leveldb {
     return result;
   }
 
+  Status TableCache::SUGet(const ReadOptions& options,
+      int num_of_files,
+      uint64_t file_number,
+      uint64_t file_size,
+      const Slice& k,
+      void* arg,
+      void (*saver)(void*, const Slice&, const Slice&)) {
+    Cache::Handle* handle = NULL;
+    Status s = FindTable(file_number, file_size, &handle);
+    bool isHit = false;
+#ifdef VERIFY
+    int merkle_height = 0;
+    uint64_t tmp = num_of_files;
+    uint64_t num_records = (file_size)/(2<<20)*7000;
+    static int merkle_count=0;
+    static int file_count=0;
+    while (tmp >>= 1) { ++merkle_height; }
+    merkle_height++;
+    while (num_records >>= 1) { ++merkle_height; }
+    merkle_height++;
+#endif
+    if (s.ok()) {
+      Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
+      s = t->InternalGet(options, k, arg, saver,&isHit);
+      cache_->Release(handle);
+#ifdef VERIFY
+      if (!isHit)
+      ecall_verify_file1(merkle_height);
+#endif
+    }
+    return s;
+  }
+
+
+
   Status TableCache::Get(const ReadOptions& options,
       uint64_t file_number,
       uint64_t file_size,
@@ -115,38 +150,6 @@ namespace leveldb {
       Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
       s = t->InternalGet(options, k, arg, saver);
       cache_->Release(handle);
-    }
-    return s;
-  }
-  Status TableCache::SUGet(const ReadOptions& options,
-      int num_of_files,
-      uint64_t file_number,
-      uint64_t file_size,
-      const Slice& k,
-      void* arg,
-      void (*saver)(void*, const Slice&, const Slice&), int* pf, int* pf_index) {
-    int merkle_height = 0;
-    uint64_t tmp = num_of_files;
-    uint64_t num_records = (file_size)/(2<<20)*7000;
-    static int merkle_count=0;
-    static int file_count=0;
-#ifdef VERIFY
-        while (tmp >>= 1) { ++merkle_height; }
-        merkle_height++;
-        while (num_records >>= 1) { ++merkle_height; }
-        merkle_height++;
-#endif
-    Cache::Handle* handle = NULL;
-    Status s = FindTable(file_number, file_size, &handle);
-    if (s.ok()) {
-      Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
-      s = t->InternalGet(options, k, arg, saver);
-      cache_->Release(handle);
-#ifdef VERIFY
-    //  ecall_verify_file1(merkle_height);
-#endif
-      pf[*pf_index] = merkle_height;
-      *pf_index = (*pf_index)+1;
     }
     return s;
   }

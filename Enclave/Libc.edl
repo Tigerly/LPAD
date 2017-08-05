@@ -28,5 +28,8 @@ enclave {
     public void ecall_postget([in] char key[100],unsigned int id,unsigned long seq, unsigned long tw, [in] int pf[1000], int pf_index);
     public void ecall_preput([in, out] unsigned int id[1]);
     public void ecall_postput([in] char key[100],unsigned int id,unsigned long seq);
+    public void ecall_memtable_create();
+    public void ecall_memtable_get(long arg);
+    public void ecall_memtable_add(long arg);
   };
 };

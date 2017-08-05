@@ -19,7 +19,7 @@
 
 //#elif defined(__GNUC__)
 # define TOKEN_FILENAME   "enclave.token"
-# define ENCLAVE_FILENAME "enclave.signed.so"
+# define ENCLAVE_FILENAME "//home//ju//enclave.signed.so"
 
 extern sgx_enclave_id_t global_eid;    /* global enclave id */
 

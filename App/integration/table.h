@@ -69,7 +69,7 @@ class Table {
   Status InternalGet(
       const ReadOptions&, const Slice& key,
       void* arg,
-      void (*handle_result)(void* arg, const Slice& k, const Slice& v));
+      void (*handle_result)(void* arg, const Slice& k, const Slice& v), bool *isHit);
 
 
   void ReadMeta(const Footer& footer);

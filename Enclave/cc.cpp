@@ -55,9 +55,14 @@ void enclave_preget(unsigned int idd[]) {
 bool lpad_verify(RH rh,int pf[],int pf_index) {
   unsigned char buf[44];
   unsigned char ret[20];
-  for(int i=0;i<pf_index;i++)
-    for (int j=0;i<pf[i];j++)
+  static int maxcount =0;
+  for(int i=0;i<pf_index;i++) {
+    for (int j=0;j<pf[i];j++) {
       sha1(buf,24,ret);
+    }
+  //  maxcount = pf[i]>maxcount?pf[i]:maxcount;
+  }
+  //bar1("pf_index=%d\n",maxcount);
   return true;
 }
 

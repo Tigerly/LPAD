@@ -22,10 +22,6 @@ class TableCache;
 class Version;
 class VersionEdit;
 class VersionSet;
-struct mht_node {
-  unsigned char digest[20];
-};
-
 
 class DBImpl : public DB {
  public:
@@ -34,16 +30,11 @@ class DBImpl : public DB {
 
   // Implementations of the DB interface
   virtual Status Put(const WriteOptions&, const Slice& key, const Slice& value);
-  virtual Status SUPut(const WriteOptions&, const Slice& key, const Slice& value, unsigned long *seq);
   virtual Status Delete(const WriteOptions&, const Slice& key);
   virtual Status Write(const WriteOptions& options, WriteBatch* updates);
-  virtual Status SUWrite(const WriteOptions& options, WriteBatch* updates, unsigned long *seq);
   virtual Status Get(const ReadOptions& options,
                      const Slice& key,
                      std::string* value);
-  virtual Status SUGet(const ReadOptions& options,
-                     const Slice& key,
-                     std::string* value, unsigned long *seq, unsigned long *tw, int* pf, int* pf_index);
   virtual Iterator* NewIterator(const ReadOptions&);
   virtual const Snapshot* GetSnapshot();
   virtual void ReleaseSnapshot(const Snapshot* snapshot);
@@ -73,24 +64,22 @@ class DBImpl : public DB {
   // bytes.
   void RecordReadSample(Slice key);
 
-  struct CompactionState;
-  Status SU_flush_data(Slice &key, Slice &value, CompactionState* compact, std::string *current_user_key, bool *has_current_user_key, SequenceNumber *k);
  private:
-  Status SU_compact(CompactionState* compact,int n_ways);
-
   friend class DB;
+  struct CompactionState;
   struct Writer;
 
   Iterator* NewInternalIterator(const ReadOptions&,
-      SequenceNumber* latest_snapshot,
-      uint32_t* seed);
+                                SequenceNumber* latest_snapshot,
+                                uint32_t* seed);
 
   Status NewDB();
 
   // Recover the descriptor from persistent storage.  May do a significant
   // amount of work to recover recently logged updates.  Any changes to
   // be made to the descriptor are added to *edit.
-  Status Recover(VersionEdit* edit) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status Recover(VersionEdit* edit, bool* save_manifest)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   void MaybeIgnoreError(Status* s) const;
 
@@ -102,9 +91,8 @@ class DBImpl : public DB {
   // Errors are recorded in bg_error_.
   void CompactMemTable() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  Status RecoverLogFile(uint64_t log_number,
-                        VersionEdit* edit,
-                        SequenceNumber* max_sequence)
+  Status RecoverLogFile(uint64_t log_number, bool last_log, bool* save_manifest,
+                        VersionEdit* edit, SequenceNumber* max_sequence)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status WriteLevel0Table(MemTable* mem, VersionEdit* edit, Version* base)
@@ -112,13 +100,12 @@ class DBImpl : public DB {
 
   Status MakeRoomForWrite(bool force /* compact even if there is room? */)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  WriteBatch* BuildBatchGroup(Writer** last_writer, unsigned long seq);
+  WriteBatch* BuildBatchGroup(Writer** last_writer);
 
   void RecordBackgroundError(const Status& s);
 
   void MaybeScheduleCompaction() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   static void BGWork(void* db);
-  static void BGWork1(void* db);
   void BackgroundCall();
   void  BackgroundCompaction() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void CleanupCompaction(CompactionState* compact)
@@ -128,7 +115,6 @@ class DBImpl : public DB {
 
   Status OpenCompactionOutputFile(CompactionState* compact);
   Status FinishCompactionOutputFile(CompactionState* compact, Iterator* input);
-  Status FinishCompactionOutputFile1(CompactionState* compact);
   Status InstallCompactionResults(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 

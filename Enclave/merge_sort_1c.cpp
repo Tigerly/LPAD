@@ -20,7 +20,7 @@ struct enclave_g_arg_t *cookie;
 struct mht_node {
   unsigned char digest[20];
 };
-#define MERKLE_TREE 1
+#define MERKLE_TREE 0
 void sha3_update(const unsigned char *input, unsigned int length);
 void sha3_final(unsigned char *hash, unsigned int size);
 void* sha1(void* message, int message_len, void* digest);
@@ -59,9 +59,9 @@ void static insert(const char* message, int message_len) {
   unsigned char m[40];
   unsigned char dummy[20];
   int tree[100];
-  // sha3_update((unsigned const char*)message,message_len);
-  // sha3_final(node->digest,20);
-  sha1((void *)message,message_len,dummy);
+   //sha3_update((unsigned const char*)message,message_len);
+   //sha3_final(node->digest,20);
+  //sha1((void *)message,message_len,dummy);
   //memcpy(carry,dummy,20);
   for (i=0;i<100;i++) {
     if (tree[i] == 0) {
@@ -71,9 +71,9 @@ void static insert(const char* message, int message_len) {
     } else {
       //memcpy(m,dummy,20);
       //memcpy(m+20,carry,20);
-      // sha3_update((unsigned const char*)m,40);
-      // sha3_final(carry,20);
-      sha1(m,40,carry);
+       sha3_update((unsigned const char*)m,40);
+       sha3_final(carry,20);
+      //sha1(m,40,carry);
       tree[i]=0;
     }
   }

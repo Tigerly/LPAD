@@ -36,7 +36,17 @@ void do_flush_eextrac(int key_size, int value_size,
     char key[],char value[]);
 void do_reload_eextrac(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx);
+void ecall_memtable_create1() {
+  ecall_memtable_create(global_eid);
+}
 
+void ecall_memtable_get1(long arg) {
+  ecall_memtable_get(global_eid,arg);
+}
+
+void ecall_memtable_add1(long arg) {
+  ecall_memtable_add(global_eid,arg);
+}
 void ecall_preget1(unsigned int id[]) {
   ecall_preget(global_eid,id);
 }
@@ -271,21 +281,21 @@ void ocall_bar(const char *str)
 /* extra-extra-copy*/
 void ocall_eextrac_flush(int key_size,int value_size, 
     char key[], char value[]){
-  do_flush_eextrac(key_size, value_size, key,value); 
+  //do_flush_eextrac(key_size, value_size, key,value); 
 }
 
 void ocall_eextrac_nextKey(int key_size[],int value_size[],
     char key[], char value[], int valid[], int fileIdx){
-  do_reload_eextrac(key_size,value_size,key,value,valid,fileIdx);
+//  do_reload_eextrac(key_size,value_size,key,value,valid,fileIdx);
 }
 
 /* 1-copy*/
 void ocall_1c_flush(){
-  do_flush_1c(); 
+//  do_flush_1c(); 
 }
 
 void ocall_1c_reload(int fileIdx){
-  do_reload_1c(fileIdx);
+//  do_reload_1c(fileIdx);
 }
 #if 0
 void ocall_flush(int key_sizes[],int value_sizes[], 
@@ -320,6 +330,16 @@ int ocall_append_nospace(int block_type, size_t size) {
 }
 #endif
 /* Application entry */
+void prestart() {
+if(initialize_enclave() < 0){printf("Error enclave and exit\n");return;}
+  /* Utilize edger8r attributes */
+  edger8r_function_attributes();
+
+}
+
+void poststop() {
+  sgx_destroy_enclave(global_eid);
+}
 int SGX_CDECL main(int argc, char *argv[])
 {
   int i = 3;
@@ -337,7 +357,7 @@ int SGX_CDECL main(int argc, char *argv[])
   struct timeval start,end;
   //  su_prepare_zc(argc, argv, &file_count,&my_arg1,&my_arg2);
   gettimeofday(&start,NULL);
-  db_bench_entry(argc,argv);
+  //db_bench_entry(argc,argv);
   //  retval=ecall_foo1(file_count,my_arg1,my_arg2);
   //  su_cleanup_zc();
   gettimeofday(&end,NULL);

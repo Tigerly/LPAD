@@ -9,6 +9,9 @@
 #include "iterator.h"
 #include "coding.h"
 
+void ecall_memtable_add1(long myarg);
+void ecall_memtable_get1(long myarg);
+void ecall_memtable_create1();
 namespace leveldb {
 
 static Slice GetLengthPrefixedSlice(const char* data) {
@@ -22,6 +25,7 @@ MemTable::MemTable(const InternalKeyComparator& cmp)
     : comparator_(cmp),
       refs_(0),
       table_(comparator_, &arena_) {
+    ecall_memtable_create1();
 }
 
 MemTable::~MemTable() {
@@ -79,6 +83,20 @@ Iterator* MemTable::NewIterator() {
   return new MemTableIterator(&table_);
 }
 
+struct arg_out_mem {
+  Slice  userkey;
+  Slice memkey;
+  std::string* value;
+  Status* s;
+};
+struct arg_mem {
+  SequenceNumber s;
+  ValueType type;
+  Slice key;
+  Slice value;
+};
+
+
 void MemTable::Add(SequenceNumber s, ValueType type,
                    const Slice& key,
                    const Slice& value) {
@@ -87,6 +105,13 @@ void MemTable::Add(SequenceNumber s, ValueType type,
   //  key bytes    : char[internal_key.size()]
   //  value_size   : varint32 of value.size()
   //  value bytes  : char[value.size()]
+  struct arg_mem thearg;
+    thearg.s = s;
+    thearg.type=type;
+    thearg.key=key;
+    thearg.value=value;
+    ecall_memtable_add1((long)&thearg);
+
   size_t key_size = key.size();
   size_t val_size = value.size();
   size_t internal_key_size = key_size + 8;
@@ -104,6 +129,7 @@ void MemTable::Add(SequenceNumber s, ValueType type,
   assert((p + val_size) - buf == encoded_len);
   table_.Insert(buf);
 }
+
 bool MemTable::SUGet(const LookupKey& key, std::string* value, Status* s, uint64_t* seq) {
   Slice memkey = key.memtable_key();
   Table::Iterator iter(&table_);
@@ -143,6 +169,16 @@ bool MemTable::SUGet(const LookupKey& key, std::string* value, Status* s, uint64
 }
 
 bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
+  //su_hack
+    struct arg_out_mem thearg;
+    thearg.userkey =key.user_key();
+    thearg.memkey = key.memtable_key();
+    thearg.value=value;
+    thearg.s=s;
+    ecall_memtable_get1((long)&thearg);
+    //std::cout<<"from enclave is"<<*value<<std::endl;
+    //su_hack_end
+
   Slice memkey = key.memtable_key();
   Table::Iterator iter(&table_);
   iter.Seek(memkey.data());

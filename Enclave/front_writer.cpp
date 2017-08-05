@@ -46,9 +46,9 @@ void* sha1(void* message, int message_len, void* digest);
 
 void enclave_verify_file(int merkle_height) {
   for (int i=0;i<merkle_height;i++) {
-    // sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
-    //  sha3_final(ret,DIGEST_SIZE);
-    sha1(buf,KEY_SIZE+SEQ_SIZE,ret);
+      sha3_update((unsigned const char*)buf,KEY_SIZE+SEQ_SIZE);
+      sha3_final(ret,DIGEST_SIZE);
+    //sha1(buf,KEY_SIZE+SEQ_SIZE,ret);
   }
 }
 void static add_chain() {
@@ -76,9 +76,9 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
   unsigned char carry[20];
   unsigned char m[40];
   struct mht_node* node = (struct mht_node*)malloc(sizeof(struct mht_node));
-  //  sha3_update((unsigned const char*)message,message_len);
-  //  sha3_final(node->digest,20);
-  sha1((void *)message,message_len,node->digest);
+    sha3_update((unsigned const char*)message,message_len);
+    sha3_final(node->digest,20);
+  //sha1((void *)message,message_len,node->digest);
   memcpy(carry,node->digest,20);
   for (i=0;i<100;i++) {
     if (tree[i] == NULL) {
@@ -88,10 +88,9 @@ void static build_merkle(struct mht_node** tree, const char* message, int messag
     } else {
       memcpy(m,tree[i]->digest,20);
       memcpy(m+20,carry,20);
-      // sha1(m,40,carry);
-      //   sha3_update((unsigned const char*)m,40);
-      //   sha3_final(carry,20);
-      sha1(m,40,carry);
+        sha3_update((unsigned const char*)m,40);
+         sha3_final(carry,20);
+      //sha1(m,40,carry);
       if (tree[i]!=NULL)
         free(tree[i]);
       tree[i]=NULL;

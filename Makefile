@@ -1,8 +1,8 @@
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/intel/sgxsdk
-SGX_MODE ?= SIM
-#SGX_MODE ?= HW
+#SGX_MODE ?= SIM
+SGX_MODE ?= HW
 SGX_PRELEASE ?= 1
 
 #turn on this bit to enable enclave verify
@@ -40,9 +40,9 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-        SGX_COMMON_CFLAGS += -O0 -g
+        SGX_COMMON_CFLAGS += -O2 -DNDEBUG
 else
-        SGX_COMMON_CFLAGS += -O0
+        SGX_COMMON_CFLAGS += -O2 -DNDEBUG
 endif
 
 
@@ -114,7 +114,8 @@ LEVELDB_INT_FILES := App/integration/builder.cpp \
                      App/integration/status.cpp \
                      App/integration/port_posix.cpp \
                      App/integration/db_bench.cpp  \
-                     App/integration/testutil.cpp 
+                     App/integration/testutil.cpp \
+                    App/integration/sha3.cpp App/integration/sha1.cpp 
 #ifeq ($(LDB_INT), 1)
 # 	App_Cpp_Files := App/App.cpp $(wildcard App/Edger8rSyntax/*.cpp) $(LEVELDB_FILES) $(LEVELDB_ZC_FILES)
 #else
@@ -145,7 +146,7 @@ else
 endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread 
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -shared  -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread 
 ifeq ($(PROFILE), 1)
 App_Link_Flags += -pg
 endif
@@ -169,7 +170,7 @@ ifneq ($(SGX_MODE), HW)
 else
 	Trts_Library_Name := sgx_trts
 	Service_Library_Name := sgx_tservice
-	Crypto_Library_Name := sgx_tcrypto_opt
+	Crypto_Library_Name := sgx_tcrypto
 endif
 Enclave_zc_Files := Enclave/zerocpy/ecall_entry.cpp \
                          Enclave/zerocpy/table.cpp \
@@ -186,7 +187,7 @@ Enclave_zc_Files := Enclave/zerocpy/ecall_entry.cpp \
                          Enclave/zerocpy/sha3.cpp
 
 #Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort2.cpp Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp $(Enclave_zc_Files)
-Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp Enclave/sha3.cpp Enclave/front_writer.cpp Enclave/sha1.cpp Enclave/cc.cpp
+Enclave_Cpp_Files := Enclave/Enclave.cpp $(wildcard Enclave/Edger8rSyntax/*.cpp) Enclave/merge_sort_eextrac.cpp Enclave/merge_sort_1c.cpp Enclave/sha3.cpp Enclave/front_writer.cpp Enclave/sha1.cpp Enclave/cc.cpp Enclave/memtable/m.cpp Enclave/memtable/comparator.cpp Enclave/memtable/memtable.cpp Enclave/memtable/arena.cpp Enclave/memtable/iterator.cpp Enclave/memtable/status.cpp Enclave/memtable/coding.cpp Enclave/memtable/dbformat.cpp Enclave/memtable/logging.cpp
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)

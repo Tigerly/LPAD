@@ -186,6 +186,7 @@ int initialize_enclave(void)
 		strncpy(token_path, TOKEN_FILENAME, sizeof(TOKEN_FILENAME));
 	}
 
+        printf("token_path=%s\n",token_path);
 	FILE *fp = fopen(token_path, "rb");
 	if (fp == NULL && (fp = fopen(token_path, "wb")) == NULL) {
 		printf("Warning: Failed to create/open the launch token file \"%s\".\n", token_path);

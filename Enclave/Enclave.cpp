@@ -48,6 +48,9 @@ void ecall_sgx_cpuid(int cpuinfo[4], int leaf)
     abort();
 }
 
+void enclave_memtable_create();
+void enclave_memtable_add(long arg);
+void enclave_memtable_get(long arg);
 void enclave_preput(unsigned int id[]);
 void enclave_postput(char key[],unsigned int id,unsigned long seq);
 void enclave_preget(unsigned int id[]);
@@ -91,3 +94,14 @@ void ecall_preput(unsigned int id[]){
 void ecall_postput(char key[],unsigned int id,unsigned long seq){
   enclave_postput(key,id,seq);
 }
+
+void ecall_memtable_create(){
+  enclave_memtable_create();
+}
+void ecall_memtable_get(long arg){
+  enclave_memtable_get(arg);
+}
+void ecall_memtable_add(long arg){
+  enclave_memtable_add(arg);
+}
+
